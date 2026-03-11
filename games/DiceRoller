@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<input type="range" id="rating" name="rating" min="-100" max="100" value="-150" step="1">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roller</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #88e788 0%, #764ba2 100%);
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .dice {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 15px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 72px;
+            margin: 20px 0;
+            transition: transform 0.3s;
+        }
+        
+        .dice.rolling {
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+        
+        button {
+            background: #50c878;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .result {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #764ba2;
+            font-weight: bold;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Let's go gambling!</h1>
+        <div class="dice" id="dice">?</div>
+        <div class="result" id="result"></div>
+        <button onclick="rollDice()">Roll Dice</button>
+    </div>
+
+    <script>
+        function rollDice() {
+            const dice = document.getElementById('dice');
+            const result = document.getElementById('result');
+            
+            // Add rolling animation
+            dice.classList.add('rolling');
+            
+            // Generate random number between 1 and 100
+            const roll = Math.floor(Math.random() * 200) + -100;
+            
+            // Show the result after animation
+            setTimeout(() => {
+                dice.textContent = roll;
+                result.textContent = `You rolled a ${roll}!`;
+                dice.classList.remove('rolling');
+            }, 500);
+        }
+    </script>
+<input type="range" id="rating" name="rating" min="-100" max="100" value="150" step="1">
+</body>
+</html>
+
