@@ -264,7 +264,6 @@
     { title: "Terminal",          file: "games/Terminal.html" },
     { title: "Gravity Simulator", file: "games/GravitySim.html" },
     { title: "Neon Chamber",      file: "games/NeonChamber.html" },
-    { title: "Chess",             file: "https://sz-games.github.io/games/game.html?game=https://sz-games.github.io/games/chess/index.html#game" },
     { title: "Buckshot Roulette", file: "https://ubghyper.github.io/GameList.github.io/Buckshot-Roulete/" },
     { title: "Pokemon Clone",     file: "https://syntax-error-games.github.io/2026Q1_Fakemon/" },
     { title: "Drive Mad",         file: "https://ubghyper.github.io/GameList.github.io/Drive-Mad/" },
@@ -451,6 +450,8 @@
   let walkTime=0;
   let walking=false;
   let jumpVelocity=0;
+  let wasAirborne=false;
+  let landingBounce=0;
   const GRAVITY=-14.5;
   const JUMP_SPEED=5.4;
   const FLOOR_Y=-0.38;
@@ -686,6 +687,8 @@
   let phase = PHASE_ROOM;
   let arcadePowered = false;
   let playerNearCabinet = false;
+  let preArcadeCameraPos = null;
+  let preArcadeCameraTarget = null;
   let playerVelocity = new THREE.Vector3();
   const moveKeys = {w:false,a:false,s:false,d:false};
   const roomPrompt = document.getElementById('room-prompt');
@@ -699,6 +702,8 @@
         player: {x:player.position.x, y:player.position.y, z:player.position.z},
         camera: {x:camera.position.x, y:camera.position.y, z:camera.position.z},
         target: {x:controls.target.x, y:controls.target.y, z:controls.target.z},
+        preArcadeCamera: preArcadeCameraPos ? {x:preArcadeCameraPos.x, y:preArcadeCameraPos.y, z:preArcadeCameraPos.z} : null,
+        preArcadeTarget: preArcadeCameraTarget ? {x:preArcadeCameraTarget.x, y:preArcadeCameraTarget.y, z:preArcadeCameraTarget.z} : null,
         savedAt: Date.now(),
         ...extra
       };
@@ -770,6 +775,15 @@
     roomPrompt.style.display = 'none';
     document.getElementById('crosshair-hint').innerHTML =
       'ARCADE MODE<br>arrow keys / scroll / joystick &bull; click a game to play &bull; ESC to return';
+
+    // remember exactly how you were looking in room mode, so leaving arcade
+    // mode later can put the camera back the same way instead of guessing.
+    // (skipped when restoring a saved session — that path fills these in
+    // from storage instead, below in restoreSavedSession)
+    if (!fromRestore) {
+      preArcadeCameraPos = camera.position.clone();
+      preArcadeCameraTarget = controls.target.clone();
+    }
     saveSession({phase:PHASE_ARCADE});
 
     screenMesh.getWorldPosition(_worldPos);
@@ -791,11 +805,15 @@
     document.getElementById('crosshair-hint').innerHTML =
       'WASD &bull; move &nbsp;&bull;&nbsp; mouse &bull; look around<br>walk to the arcade cabinet';
 
-    // ease back out to a normal over-the-shoulder view of the player,
-    // instead of snapping straight from "zoomed into the CRT" to room mode
+    // ease back to exactly how the camera was framed before you sat down,
+    // instead of snapping or guessing at a generic offset
     controls.enabled = false;
-    const targetCamPos = player.position.clone().add(new THREE.Vector3(0, 2.0, 1.0));
-    const targetLookAt = player.position.clone().add(new THREE.Vector3(0, 1.12, 0));
+    const targetCamPos = preArcadeCameraPos
+      ? preArcadeCameraPos.clone()
+      : player.position.clone().add(new THREE.Vector3(0, 2.0, 1.0));
+    const targetLookAt = preArcadeCameraTarget
+      ? preArcadeCameraTarget.clone()
+      : player.position.clone().add(new THREE.Vector3(0, 1.12, 0));
     animateCameraTo(targetCamPos, targetLookAt, 900, () => {
       controls.enabled = true;
       controls.enableZoom = true;
@@ -1193,10 +1211,15 @@
     // Ballistic jump physics.
     jumpVelocity+=GRAVITY*dt;
     player.position.y+=jumpVelocity*dt;
-    if(player.position.y<=FLOOR_Y){
+    const isAirborne = player.position.y > FLOOR_Y + 0.01;
+    if(!isAirborne){
       player.position.y=FLOOR_Y;
       jumpVelocity=0;
     }
+    if(wasAirborne && !isAirborne) landingBounce = 1; // just touched down
+    wasAirborne = isAirborne;
+    landingBounce = Math.max(0, landingBounce - dt*6);
+    player.scale.set(1 + landingBounce*0.10, 1 - landingBounce*0.14, 1 + landingBounce*0.10);
 
     player.position.x=THREE.MathUtils.clamp(player.position.x,-5.2,5.2);
     player.position.z=THREE.MathUtils.clamp(player.position.z,-1.8,5.3);
@@ -1209,24 +1232,43 @@
     }
 
     // Translate camera + target together. This follows the player but preserves
-    // the user's current orbit angle and zoom distance exactly.
-    const desiredTarget=player.position.clone().add(new THREE.Vector3(0,1.12,0));
+    // the user's current orbit angle and zoom distance exactly. The look
+    // target also rises as you approach the cabinet, so the marquee stays
+    // in the default frame instead of requiring you to manually drag upward
+    // to see it (that's what was making it seem to "disappear" up close).
+    const distToCabinet = player.position.distanceTo(cab);
+    const proximityT = THREE.MathUtils.clamp((4.2 - distToCabinet) / 3.2, 0, 1);
+    const desiredTarget=player.position.clone().add(new THREE.Vector3(0,1.12 + proximityT*0.85,0));
     const deltaTarget=desiredTarget.clone().sub(controls.target);
     controls.target.add(deltaTarget);
     camera.position.add(deltaTarget);
     controls.update();
 
-    if(walking){
+    if(isAirborne){
+      // jump pose: knees tuck up, arms rise, torso lifts slightly — eases
+      // in/out rather than snapping so takeoff and landing both read clearly
+      const k=Math.min(1,dt*12);
+      legL.rotation.x=THREE.MathUtils.lerp(legL.rotation.x,-0.55,k);
+      legR.rotation.x=THREE.MathUtils.lerp(legR.rotation.x,-0.55,k);
+      armL.rotation.x=THREE.MathUtils.lerp(armL.rotation.x,0.6,k);
+      armR.rotation.x=THREE.MathUtils.lerp(armR.rotation.x,0.6,k);
+      torso.position.y=THREE.MathUtils.lerp(torso.position.y,1.17,k);
+      torso.rotation.x=THREE.MathUtils.lerp(torso.rotation.x,0,k);
+    }else if(walking){
       walkTime+=dt*10;
       const swing=Math.sin(walkTime)*0.52;
       legL.rotation.x=swing; legR.rotation.x=-swing;
       armL.rotation.x=-swing*.45; armR.rotation.x=swing*.45;
       torso.position.y=1.12+Math.abs(Math.sin(walkTime*2))*.012;
+      // a slight forward lean that grows with speed, for a more natural gait
+      const speed=Math.hypot(playerVelocity.x,playerVelocity.z);
+      torso.rotation.x=THREE.MathUtils.lerp(torso.rotation.x, Math.min(0.12,speed*0.045), Math.min(1,dt*8));
     }else{
       const damp=Math.max(0,1-dt*10);
       legL.rotation.x*=damp; legR.rotation.x*=damp;
       armL.rotation.x*=damp; armR.rotation.x*=damp;
       torso.position.y+=(1.12-torso.position.y)*Math.min(1,dt*8);
+      torso.rotation.x*=damp;
     }
   }
 
@@ -1266,6 +1308,10 @@
     // never to the very beginning, once a session has reached the arcade.
     if (saved.phase === PHASE_ARCADE || saved.phase === PHASE_GAME) {
       if (saved.player) player.position.set(saved.player.x || 0, saved.player.y || 0, saved.player.z || 3.8);
+      if (saved.preArcadeCamera && saved.preArcadeTarget) {
+        preArcadeCameraPos = new THREE.Vector3(saved.preArcadeCamera.x, saved.preArcadeCamera.y, saved.preArcadeCamera.z);
+        preArcadeCameraTarget = new THREE.Vector3(saved.preArcadeTarget.x, saved.preArcadeTarget.y, saved.preArcadeTarget.z);
+      }
       restoreScreen.classList.add('show');
       phase = PHASE_ARCADE;
       controls.enableZoom = false;
