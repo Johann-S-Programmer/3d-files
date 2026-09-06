@@ -436,12 +436,23 @@
 
   const torso = new THREE.Mesh(new THREE.BoxGeometry(.30,.48,.20),playerMat);
   torso.position.y=1.12; player.add(torso);
-  const legL = new THREE.Mesh(new THREE.BoxGeometry(.105,.48,.13),playerMat);
-  legL.position.set(-.078,.62,0); player.add(legL);
-  const legR = legL.clone(); legR.position.x=.078; player.add(legR);
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(.09,.40,.12),playerMat);
-  armL.position.set(-.205,1.13,0); player.add(armL);
-  const armR = armL.clone(); armR.position.x=.205; player.add(armR);
+
+  // legs/arms: shift each box's geometry so local (0,0,0) sits at the joint
+  // (hip/shoulder) instead of the box's own center — otherwise rotating
+  // them swings from the middle of the limb instead of pivoting naturally
+  const legGeo = new THREE.BoxGeometry(.105,.48,.13);
+  legGeo.translate(0,-.24,0); // origin -> top of the box (the hip)
+  const legL = new THREE.Mesh(legGeo, playerMat);
+  legL.position.set(-.078,.86,0); player.add(legL); // .86 = old center(.62) + half-height(.24)
+  const legR = new THREE.Mesh(legGeo.clone(), playerMat);
+  legR.position.set(.078,.86,0); player.add(legR);
+
+  const armGeo = new THREE.BoxGeometry(.09,.40,.12);
+  armGeo.translate(0,-.20,0); // origin -> top of the box (the shoulder)
+  const armL = new THREE.Mesh(armGeo, playerMat);
+  armL.position.set(-.205,1.33,0); player.add(armL); // 1.33 = old center(1.13) + half-height(.20)
+  const armR = new THREE.Mesh(armGeo.clone(), playerMat);
+  armR.position.set(.205,1.33,0); player.add(armR);
 
   // Put the bottoms of the feet exactly on the floor.
   player.position.set(0,-0.38,3.8);
@@ -516,7 +527,7 @@
   }
   drawMarqueeTexture();
   const marqueeTexture = new THREE.CanvasTexture(marqueeCanvas);
-  const marqueeMaterial = new THREE.MeshBasicMaterial({ map: marqueeTexture, transparent:true, opacity:0.08 });
+  const marqueeMaterial = new THREE.MeshBasicMaterial({ map: marqueeTexture, transparent:true, opacity:1 });
   const marquee = new THREE.Mesh(
     new THREE.BoxGeometry(1.35, 0.34, 0.16),
     marqueeMaterial
@@ -734,18 +745,8 @@
     if (arcadePowered) { setRoomLighting(true); return; }
     arcadePowered = true;
     setRoomLighting(true);
-    marqueeMaterial.opacity = 1;
-    marqueeMaterial.needsUpdate = true;
-    marqueeMaterial.color.set(0xffffff);
-    marqueeMaterial.emissive = new THREE.Color(0x22e0ff);
-    marqueeMaterial.emissiveIntensity = 1.0;
-    // A brief electrical flicker.
-    let n = 0;
-    const flicker = setInterval(() => {
-      n++;
-      marqueeMaterial.opacity = (n < 5 && n % 2 === 0) ? 0.25 : 1;
-      if (n >= 6) { clearInterval(flicker); marqueeMaterial.opacity = 1; }
-    }, 65);
+    // (the "ARCADE" sign itself is always fully visible now — see
+    // marqueeMaterial's creation — only the room's lights power on here)
   }
 
   function cabinetWorldPosition() {
@@ -1248,10 +1249,10 @@
       // jump pose: knees tuck up, arms rise, torso lifts slightly — eases
       // in/out rather than snapping so takeoff and landing both read clearly
       const k=Math.min(1,dt*12);
-      legL.rotation.x=THREE.MathUtils.lerp(legL.rotation.x,-0.55,k);
-      legR.rotation.x=THREE.MathUtils.lerp(legR.rotation.x,-0.55,k);
-      armL.rotation.x=THREE.MathUtils.lerp(armL.rotation.x,0.6,k);
-      armR.rotation.x=THREE.MathUtils.lerp(armR.rotation.x,0.6,k);
+      legL.rotation.x=THREE.MathUtils.lerp(legL.rotation.x,0.55,k);
+      legR.rotation.x=THREE.MathUtils.lerp(legR.rotation.x,0.55,k);
+      armL.rotation.x=THREE.MathUtils.lerp(armL.rotation.x,-0.6,k);
+      armR.rotation.x=THREE.MathUtils.lerp(armR.rotation.x,-0.6,k);
       torso.position.y=THREE.MathUtils.lerp(torso.position.y,1.17,k);
       torso.rotation.x=THREE.MathUtils.lerp(torso.rotation.x,0,k);
     }else if(walking){
@@ -1350,8 +1351,6 @@
       arcadePowered=false;
       setRoomLighting(false);
       roomGlow.intensity=0;
-      marqueeMaterial.opacity = 0.18;
-      marqueeMaterial.needsUpdate = true;
     }
     animate();
   }
