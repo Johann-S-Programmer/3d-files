@@ -202,6 +202,71 @@
     font-size:.42rem;
   }
 
+  /* ---------- mobile touch controls (shown only when isMobile is true) ---------- */
+  #move-pad{
+    position:fixed;
+    left:26px;
+    bottom:26px;
+    width:120px;
+    height:120px;
+    display:none;
+    z-index:30;
+    touch-action:none;
+  }
+  #move-pad-outer{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    background:rgba(10,6,18,.55);
+    border:2px solid rgba(255,43,214,.5);
+  }
+  #move-pad-nub{
+    position:absolute;
+    left:50%; top:50%;
+    width:52px;
+    height:52px;
+    margin:-26px 0 0 -26px;
+    border-radius:50%;
+    background:rgba(255,43,214,.7);
+    border:2px solid var(--cyan);
+    transition:transform .05s linear;
+    pointer-events:none;
+  }
+  #jump-btn{
+    position:fixed;
+    right:26px;
+    bottom:26px;
+    width:78px;
+    height:78px;
+    border-radius:50%;
+    display:none;
+    z-index:30;
+    font-family:'Press Start 2P', monospace;
+    font-size:.5rem;
+    color:var(--cyan);
+    background:rgba(10,6,18,.55);
+    border:2px solid var(--cyan);
+    touch-action:none;
+  }
+  #jump-btn:active{ background:rgba(34,224,255,.35); }
+
+  #arcade-exit-btn{
+    position:fixed;
+    left:14px;
+    top:14px;
+    z-index:52;
+    display:none;
+    font-family:'Press Start 2P', monospace;
+    font-size:.42rem;
+    color:var(--magenta);
+    background:rgba(10,6,18,.7);
+    border:2px solid var(--magenta);
+    border-radius:4px;
+    padding:8px 10px;
+    touch-action:none;
+  }
+  #arcade-exit-btn:active{ background:rgba(255,43,214,.3); }
+
 </style>
 </head>
 <body>
@@ -237,6 +302,12 @@
   <div id="crosshair-hint">WASD &bull; move &nbsp;&bull;&nbsp; mouse &bull; look around<br>walk to the arcade cabinet</div>
   <div id="room-prompt">CLICK THE ARCADE CABINET<br><span>or press ENTER</span></div>
 </div>
+
+<div id="move-pad">
+  <div id="move-pad-outer"><div id="move-pad-nub"></div></div>
+</div>
+<button id="jump-btn">JUMP</button>
+<button id="arcade-exit-btn">&uarr; STAND UP</button>
 
 <div id="session-restore">
   <div class="restore-inner">
@@ -337,11 +408,19 @@
   // =====================================================================
   // Scene / renderer / camera
   // =====================================================================
+  const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 ||
+    (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+    /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+
   const appEl = document.getElementById('app');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputEncoding = THREE.sRGBEncoding;
+  // without this, the browser treats a finger-drag on the canvas as a page
+  // scroll/pan gesture and can swallow it before our pointer handlers (the
+  // in-cabinet joystick/buttons, camera orbit, etc.) ever see it move
+  renderer.domElement.style.touchAction = 'none';
   appEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -672,7 +751,7 @@
   stickBall.position.set(0, 0.2, 0);
   stickTilt.add(stickBall);
   // larger invisible sphere so the joystick is easy to grab with the mouse/finger
-  const stickGrabZone = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+  const stickGrabZone = new THREE.Mesh(new THREE.SphereGeometry(isMobile ? 0.19 : 0.12, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
   stickGrabZone.position.set(0, 0.15, 0);
   joystickGroup.add(stickGrabZone);
 
@@ -701,7 +780,97 @@
   let preArcadeCameraPos = null;
   let preArcadeCameraTarget = null;
   let playerVelocity = new THREE.Vector3();
+  function roomHintText(){
+    return isMobile
+      ? 'drag the left pad to move &nbsp;&bull;&nbsp; JUMP to jump<br>tap the arcade cabinet to sit down'
+      : 'WASD &bull; move &nbsp;&bull;&nbsp; mouse &bull; look around<br>walk to the arcade cabinet';
+  }
+  function arcadeHintText(){
+    return isMobile
+      ? 'ARCADE MODE<br>drag the joystick or tap a button &bull; tap a game to play &bull; STAND UP to return'
+      : 'ARCADE MODE<br>arrow keys / scroll / joystick &bull; click a game to play &bull; ESC to return';
+  }
+
   const moveKeys = {w:false,a:false,s:false,d:false};
+
+  function tryJump(){
+    if (Math.abs(player.position.y-FLOOR_Y)<0.03) jumpVelocity=JUMP_SPEED;
+  }
+
+  // ---- mobile: a virtual movement pad (replaces WASD) and a jump button.
+  // Shown only on touch devices, and only in room mode (arcade mode is
+  // browsed with the in-scene joystick/buttons/tap, same as on desktop).
+  const movePad = document.getElementById('move-pad');
+  const movePadOuter = document.getElementById('move-pad-outer');
+  const movePadNub = document.getElementById('move-pad-nub');
+  const jumpBtn = document.getElementById('jump-btn');
+
+  if (isMobile) {
+    let padTouchId = null;
+    const PAD_RADIUS = 46; // px the nub can travel from center before clamping
+    const PAD_DEADZONE = 12; // px before a direction registers, avoids jitter
+
+    function setPadDirection(dx, dy){
+      moveKeys.d = dx > PAD_DEADZONE;
+      moveKeys.a = dx < -PAD_DEADZONE;
+      moveKeys.s = dy > PAD_DEADZONE;
+      moveKeys.w = dy < -PAD_DEADZONE;
+    }
+    function resetPad(){
+      moveKeys.w = moveKeys.a = moveKeys.s = moveKeys.d = false;
+      movePadNub.style.transform = 'translate(0px,0px)';
+      padTouchId = null;
+    }
+
+    movePadOuter.addEventListener('pointerdown', e => {
+      padTouchId = e.pointerId;
+      movePadOuter.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    movePadOuter.addEventListener('pointermove', e => {
+      if (padTouchId === null || e.pointerId !== padTouchId) return;
+      const rect = movePadOuter.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      let dx = e.clientX - cx, dy = e.clientY - cy;
+      const dist = Math.hypot(dx, dy);
+      if (dist > PAD_RADIUS) { dx = dx / dist * PAD_RADIUS; dy = dy / dist * PAD_RADIUS; }
+      movePadNub.style.transform = `translate(${dx}px,${dy}px)`;
+      setPadDirection(dx, dy);
+      e.preventDefault();
+    });
+    movePadOuter.addEventListener('pointerup', e => {
+      if (e.pointerId !== padTouchId) return;
+      try { movePadOuter.releasePointerCapture(e.pointerId); } catch(err){}
+      resetPad();
+    });
+    movePadOuter.addEventListener('pointercancel', resetPad);
+
+    jumpBtn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      tryJump();
+    });
+
+    const arcadeExitBtn = document.getElementById('arcade-exit-btn');
+    arcadeExitBtn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      if (phase === PHASE_ARCADE && !gameOpen && !cameraAnimating) leaveArcadeView();
+    });
+  }
+
+  function updateMobileControlsVisibility(){
+    if (!isMobile) return;
+    const inRoom = phase === PHASE_ROOM && !gameOpen && !cameraAnimating;
+    movePad.style.display = inRoom ? 'block' : 'none';
+    jumpBtn.style.display = inRoom ? 'block' : 'none';
+    if (!inRoom) resetPadIfNeeded();
+
+    const inArcade = phase === PHASE_ARCADE && !gameOpen && !cameraAnimating;
+    document.getElementById('arcade-exit-btn').style.display = inArcade ? 'block' : 'none';
+  }
+  function resetPadIfNeeded(){
+    moveKeys.w = moveKeys.a = moveKeys.s = moveKeys.d = false;
+    movePadNub.style.transform = 'translate(0px,0px)';
+  }
   const roomPrompt = document.getElementById('room-prompt');
   const restoreScreen = document.getElementById('session-restore');
 
@@ -774,11 +943,7 @@
     controls.enableZoom = false;
     powerOnArcade();
     roomPrompt.style.display = 'none';
-    document.getElementById('crosshair-hint').innerHTML =
-      'ARCADE MODE<br>arrow keys / scroll / joystick &bull; click a game to play &bull; ESC to return';
-
-    // remember exactly how you were looking in room mode, so leaving arcade
-    // mode later can put the camera back the same way instead of guessing.
+    document.getElementById('crosshair-hint').innerHTML = arcadeHintText();
     // (skipped when restoring a saved session — that path fills these in
     // from storage instead, below in restoreSavedSession)
     if (!fromRestore) {
@@ -803,8 +968,7 @@
     if (gameOpen || cameraAnimating) return;
     phase = PHASE_ROOM;
     player.visible = true;
-    document.getElementById('crosshair-hint').innerHTML =
-      'WASD &bull; move &nbsp;&bull;&nbsp; mouse &bull; look around<br>walk to the arcade cabinet';
+    document.getElementById('crosshair-hint').innerHTML = roomHintText();
 
     // ease back to exactly how the camera was framed before you sat down,
     // instead of snapping or guessing at a generic offset
@@ -986,7 +1150,7 @@
     if (phase === PHASE_ROOM) {
       if (k === ' ' || e.code === 'Space') {
         e.preventDefault();
-        if (Math.abs(player.position.y-FLOOR_Y)<0.03) jumpVelocity=JUMP_SPEED;
+        tryJump();
         return;
       }
       if (lower === 'w' || lower === 'a' || lower === 's' || lower === 'd') {
@@ -1118,8 +1282,7 @@
     animateCameraTo(backPos, backTarget, 700, () => {
       gameOpen = false;
       phase = PHASE_ARCADE;
-      document.getElementById('crosshair-hint').innerHTML =
-        'ARCADE MODE<br>arrow keys / scroll / joystick &bull; click a game to play &bull; ESC to return';
+      document.getElementById('crosshair-hint').innerHTML = arcadeHintText();
       saveSession({phase:PHASE_ARCADE, gameIndex:selected});
       renderer.domElement.focus();
     });
@@ -1281,6 +1444,7 @@
 
     updatePlayer(dt);
     controls.update();
+    updateMobileControlsVisibility();
 
     if (!joystickDragging) stickTilt.rotation.x *= 0.82;
     screenGlow.intensity = 1.2 + Math.sin(Date.now() * 0.004) * 0.2;
@@ -1352,6 +1516,9 @@
       setRoomLighting(false);
       roomGlow.intensity=0;
     }
+    document.getElementById('crosshair-hint').innerHTML =
+      phase === PHASE_ROOM ? roomHintText() : arcadeHintText();
+    updateMobileControlsVisibility();
     animate();
   }
   if (document.fonts && document.fonts.ready) {
