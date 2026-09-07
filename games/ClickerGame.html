@@ -1,213 +1,987 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Clicker Game</title>
+
+    <title>Clicker Game</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f4f4f4;
+            --panel: #ffffff;
+            --text: #111111;
+            --muted: #666666;
+            --border: #111111;
+            --accent: #111111;
+            --green: #16833b;
+            --red: #c62828;
+        }
+
         body {
-            font-family: 'Consolas', 'Courier New', monospace;
-            background-color: white;
-            color: black;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            font-family: Consolas, "Courier New", monospace;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 30px 15px;
+            user-select: none;
+        }
+
+        .game {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        /* HEADER */
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(28px, 7vw, 48px);
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* STATS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            padding: 15px 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* CLICK AREA */
+
+        .click-area {
+            position: relative;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            padding: 35px 20px;
+            text-align: center;
+            overflow: hidden;
         }
 
         #click-button {
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 24px;
-            padding: 30px 60px;
-            margin: 20px 0;
-            cursor: pointer;
-            background-color: white;
+            width: min(260px, 75vw);
+            height: min(260px, 75vw);
+            border-radius: 50%;
+            border: 5px solid var(--border);
+            background: white;
             color: black;
-            border: 2px solid black;
+            font-family: inherit;
+            font-size: 26px;
+            font-weight: bold;
+            cursor: pointer;
+            transition:
+                transform 0.08s ease,
+                background 0.15s ease,
+                color 0.15s ease;
+            box-shadow: 0 8px 0 var(--border);
         }
 
         #click-button:hover {
-            background-color: black;
+            background: black;
             color: white;
+            transform: translateY(-2px);
+        }
+
+        #click-button:active,
+        #click-button.clicked {
+            transform: translateY(6px) scale(0.96);
+            box-shadow: 0 2px 0 var(--border);
+        }
+
+        .click-hint {
+            margin-top: 20px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* FLOATING POINTS */
+
+        .floating-points {
+            position: absolute;
+            pointer-events: none;
+            font-weight: bold;
+            font-size: 20px;
+            animation: floatUp 0.9s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, 0) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -100px) scale(1.3);
+            }
+        }
+
+        /* UPGRADES */
+
+        .section-title {
+            margin: 30px 0 12px;
+            font-size: 20px;
+            letter-spacing: 2px;
+        }
+
+        .upgrades {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .upgrade {
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 16px;
-            padding: 15px;
-            margin: 10px 0;
-            cursor: pointer;
-            background-color: white;
-            color: black;
-            border: 2px solid black;
-            display: block;
+            position: relative;
             width: 100%;
+            padding: 17px;
+            background: var(--panel);
+            color: var(--text);
+            border: 2px solid var(--border);
+            font-family: inherit;
             text-align: left;
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.15s ease;
         }
 
-        .upgrade:hover {
-            background-color: black;
+        .upgrade:hover:not(:disabled) {
+            background: black;
             color: white;
+            transform: translateX(4px);
+        }
+
+        .upgrade:active:not(:disabled) {
+            transform: translateX(2px);
         }
 
         .upgrade:disabled {
             cursor: not-allowed;
-            opacity: 0.5;
+            opacity: 0.45;
         }
 
-        h1, h2 {
-            font-weight: normal;
+        .upgrade-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            font-size: 16px;
+            font-weight: bold;
         }
 
-        .sparkle {
+        .upgrade-description {
+            margin-top: 7px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .upgrade:hover:not(:disabled) .upgrade-description {
+            color: #ccc;
+        }
+
+        .upgrade-bottom {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        /* PROGRESS BAR */
+
+        .progress {
+            height: 5px;
+            margin-top: 12px;
+            background: #ddd;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--border);
+            transition: width 0.2s ease;
+        }
+
+        /* CONTROLS */
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .control-button {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border: 2px solid black;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .control-button:hover {
+            background: black;
+            color: white;
+        }
+
+        .danger {
+            color: var(--red);
+        }
+
+        /* PARTICLES */
+
+        .particle {
             position: fixed;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
+            width: 8px;
+            height: 8px;
             pointer-events: none;
-            animation: sparkle-fall 2s ease-out forwards;
+            animation: particle 0.8s ease-out forwards;
+            z-index: 100;
         }
 
-        @keyframes sparkle-fall {
+        @keyframes particle {
             0% {
-                transform: translate(0, 0) scale(1);
                 opacity: 1;
+                transform: translate(0, 0) rotate(0deg) scale(1);
             }
+
             100% {
-                transform: translate(var(--randomX, 0), 100px) scale(0);
                 opacity: 0;
+                transform:
+                    translate(var(--x), var(--y))
+                    rotate(var(--rotation))
+                    scale(0);
+            }
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 550px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat {
+                padding: 12px;
+            }
+
+            .upgrade-top {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .controls {
+                flex-direction: column;
             }
         }
     </style>
 </head>
+
 <body>
-    <h1>CLICKER GAME</h1>
 
-    <h2>Points: <span id="points">0</span></h2>
-    <h2>Points Per Click: <span id="click-value">1</span></h2>
+<div class="game">
 
-    <button id="click-button">CLICK ME</button>
+    <header>
+        <h1>CLICKER</h1>
+        <div class="subtitle">A very simple addiction.</div>
+    </header>
 
-    <h2>UPGRADES</h2>
+    <!-- STATS -->
 
-    <button class="upgrade" id="double-upgrade">
-        Double Click Value - Cost: <span id="double-cost">10</span>
-    </button>
+    <section class="stats">
 
-    <button class="upgrade" id="auto-upgrade">
-        Auto-Clicker (+<span id="auto-value">1</span>/sec) - Cost:
-        <span id="auto-cost">50</span> - Owned:
-        <span id="auto-owned">0</span>
-    </button>
+        <div class="stat">
+            <span class="stat-label">POINTS</span>
+            <span class="stat-value" id="points">0</span>
+        </div>
 
-    <script>
-        // Game variables
-        let points = 0;
-        let clickValue = 1;
-        let doubleCost = 10;
-        let autoClickerCost = 50;
-        let autoClickerOwned = 0;
-        let autoClickerValue = 1;
+        <div class="stat">
+            <span class="stat-label">PER CLICK</span>
+            <span class="stat-value" id="click-value">1</span>
+        </div>
 
-        // Get elements
-        const pointsDisplay = document.getElementById('points');
-        const clickValueDisplay = document.getElementById('click-value');
-        const clickButton = document.getElementById('click-button');
-        const doubleUpgrade = document.getElementById('double-upgrade');
-        const doubleCostDisplay = document.getElementById('double-cost');
-        const autoUpgrade = document.getElementById('auto-upgrade');
-        const autoCostDisplay = document.getElementById('auto-cost');
-        const autoOwnedDisplay = document.getElementById('auto-owned');
-        const autoValueDisplay = document.getElementById('auto-value');
+        <div class="stat">
+            <span class="stat-label">PER SECOND</span>
+            <span class="stat-value" id="points-per-second">0</span>
+        </div>
 
-        // Click button function
-        clickButton.addEventListener('click', function (event) {
-            points = points + clickValue;
-            updateDisplay();
-            createSparkles(event);
-        });
+    </section>
 
-        // Double upgrade function
-        doubleUpgrade.addEventListener('click', function () {
-            if (points >= doubleCost) {
-                points = points - doubleCost;
+    <!-- CLICK BUTTON -->
 
-                // Linear Logic: Increase click power slightly every purchase
-                clickValue = Math.floor(clickValue * 2);
+    <section class="click-area" id="click-area">
 
-                doubleCost = Math.floor(doubleCost * 2);
-                updateDisplay();
-            }
-        });
+        <button id="click-button">
+            CLICK
+        </button>
 
-        // Auto-clicker upgrade function
-        autoUpgrade.addEventListener('click', function () {
-            if (points >= autoClickerCost) {
-                points = points - autoClickerCost;
-                autoClickerOwned = autoClickerOwned + 1;
+        <div class="click-hint">
+            Click the button or press SPACE
+        </div>
 
-                // Strength grows by a power of 1.3 based on how many you own
-                autoClickerValue = Math.floor(Math.pow(1.3, autoClickerOwned));
+    </section>
 
-                // Exponential formula: New Cost = Old Cost * Growth Rate
-                autoClickerCost = Math.floor(autoClickerCost * 1.20);
+    <!-- UPGRADES -->
 
-                updateDisplay();
-            }
-        });
+    <h2 class="section-title">UPGRADES</h2>
 
-        // Create sparkles function
-        function createSparkles(event) {
-            const colors = ['#FF0000', '#FF4500', '#FFD700'];
-            const sparkleCount = 20;
+    <section class="upgrades">
 
-            for (let i = 0; i < sparkleCount; i++) {
-                const sparkle = document.createElement('div');
-                sparkle.className = 'sparkle';
+        <button class="upgrade" id="double-upgrade">
 
-                // Random color from our array
-                const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                sparkle.style.backgroundColor = randomColor;
+            <div class="upgrade-top">
+                <span>POWER CLICK</span>
+                <span>Cost: <span id="double-cost">10</span></span>
+            </div>
 
-                // Position at click location
-                sparkle.style.left = event.pageX + 'px';
-                sparkle.style.top = event.pageY + 'px';
+            <div class="upgrade-description">
+                Doubles the amount of points earned per click.
+            </div>
 
-                // Random horizontal spread
-                const randomX = (Math.random() - 0.5) * 100;
-                sparkle.style.setProperty('--randomX', randomX + 'px');
+            <div class="upgrade-bottom">
+                <span>Click power: ×2</span>
+                <span>Level: <span id="double-level">0</span></span>
+            </div>
 
-                document.body.appendChild(sparkle);
+            <div class="progress">
+                <div class="progress-bar" id="double-progress"></div>
+            </div>
 
-                // Remove sparkle after animation
-                setTimeout(function () {
-                    sparkle.remove();
-                }, 1000);
-            }
+        </button>
+
+
+        <button class="upgrade" id="auto-upgrade">
+
+            <div class="upgrade-top">
+                <span>AUTO CLICKER</span>
+                <span>Cost: <span id="auto-cost">50</span></span>
+            </div>
+
+            <div class="upgrade-description">
+                Automatically generates points every second.
+            </div>
+
+            <div class="upgrade-bottom">
+                <span>+<span id="auto-value">1</span>/sec each</span>
+                <span>Owned: <span id="auto-owned">0</span></span>
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar" id="auto-progress"></div>
+            </div>
+
+        </button>
+
+    </section>
+
+    <!-- CONTROLS -->
+
+    <div class="controls">
+
+        <button class="control-button" id="save-button">
+            SAVE
+        </button>
+
+        <button class="control-button" id="reset-button">
+            RESET
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /* =========================================
+       GAME STATE
+    ========================================= */
+
+    const game = {
+        points: 0,
+        clickValue: 1,
+
+        doubleCost: 10,
+        doubleLevel: 0,
+
+        autoCost: 50,
+        autoOwned: 0,
+        autoValue: 1,
+
+        lastSave: Date.now()
+    };
+
+
+    /* =========================================
+       DOM
+    ========================================= */
+
+    const pointsDisplay =
+        document.getElementById("points");
+
+    const clickValueDisplay =
+        document.getElementById("click-value");
+
+    const pointsPerSecondDisplay =
+        document.getElementById("points-per-second");
+
+    const clickButton =
+        document.getElementById("click-button");
+
+    const clickArea =
+        document.getElementById("click-area");
+
+    const doubleUpgrade =
+        document.getElementById("double-upgrade");
+
+    const doubleCostDisplay =
+        document.getElementById("double-cost");
+
+    const doubleLevelDisplay =
+        document.getElementById("double-level");
+
+    const doubleProgress =
+        document.getElementById("double-progress");
+
+    const autoUpgrade =
+        document.getElementById("auto-upgrade");
+
+    const autoCostDisplay =
+        document.getElementById("auto-cost");
+
+    const autoOwnedDisplay =
+        document.getElementById("auto-owned");
+
+    const autoValueDisplay =
+        document.getElementById("auto-value");
+
+    const autoProgress =
+        document.getElementById("auto-progress");
+
+    const saveButton =
+        document.getElementById("save-button");
+
+    const resetButton =
+        document.getElementById("reset-button");
+
+
+    /* =========================================
+       NUMBER FORMATTING
+    ========================================= */
+
+    function formatNumber(number) {
+
+        if (number < 1000) {
+            return Math.floor(number).toString();
         }
 
-        function updateDisplay() {
-            pointsDisplay.textContent = points;
-            clickValueDisplay.textContent = clickValue;
-            doubleCostDisplay.textContent = doubleCost;
+        const units = [
+            "K",
+            "M",
+            "B",
+            "T",
+            "Qa",
+            "Qi"
+        ];
 
-            autoCostDisplay.textContent = autoClickerCost;
-            autoOwnedDisplay.textContent = autoClickerOwned;
-            autoValueDisplay.textContent = autoClickerValue;
+        let unitIndex = -1;
 
-            doubleUpgrade.disabled = points < doubleCost;
-            autoUpgrade.disabled = points < autoClickerCost;
+        while (number >= 1000 && unitIndex < units.length - 1) {
+            number /= 1000;
+            unitIndex++;
         }
 
-        // Auto-clicker timer
-        setInterval(function () {
-            if (autoClickerOwned > 0) {
-                points = points + (autoClickerOwned * autoClickerValue);
-                updateDisplay();
-            }
-        }, 1000);
+        return number.toFixed(number >= 100 ? 0 : 2)
+            .replace(/\.00$/, "")
+            + units[unitIndex];
+    }
+
+
+    /* =========================================
+       CLICKING
+    ========================================= */
+
+    clickButton.addEventListener("click", function(event) {
+
+        game.points += game.clickValue;
+
+        animateButton();
+        createFloatingPoints(event, game.clickValue);
+        createParticles(event);
 
         updateDisplay();
-    </script>
+    });
+
+
+    function animateButton() {
+
+        clickButton.classList.remove("clicked");
+
+        // Force browser to restart animation
+        void clickButton.offsetWidth;
+
+        clickButton.classList.add("clicked");
+    }
+
+
+    /* =========================================
+       POWER CLICK UPGRADE
+    ========================================= */
+
+    doubleUpgrade.addEventListener("click", function() {
+
+        if (game.points < game.doubleCost) {
+            return;
+        }
+
+        game.points -= game.doubleCost;
+
+        game.clickValue *= 2;
+        game.doubleLevel++;
+
+        game.doubleCost =
+            Math.floor(game.doubleCost * 2.25);
+
+        updateDisplay();
+        saveGame();
+    });
+
+
+    /* =========================================
+       AUTO CLICKER
+    ========================================= */
+
+    autoUpgrade.addEventListener("click", function() {
+
+        if (game.points < game.autoCost) {
+            return;
+        }
+
+        game.points -= game.autoCost;
+
+        game.autoOwned++;
+
+        game.autoValue =
+            Math.max(
+                1,
+                Math.floor(
+                    Math.pow(1.35, game.autoOwned)
+                )
+            );
+
+        game.autoCost =
+            Math.floor(game.autoCost * 1.2);
+
+        updateDisplay();
+        saveGame();
+    });
+
+
+    /* =========================================
+       AUTO INCOME
+    ========================================= */
+
+    setInterval(function() {
+
+        if (game.autoOwned <= 0) {
+            return;
+        }
+
+        const income =
+            game.autoOwned * game.autoValue;
+
+        game.points += income;
+
+        updateDisplay();
+
+    }, 1000);
+
+
+    /* =========================================
+       FLOATING POINT NUMBERS
+    ========================================= */
+
+    function createFloatingPoints(event, amount) {
+
+        const element =
+            document.createElement("div");
+
+        element.className =
+            "floating-points";
+
+        element.textContent =
+            "+" + formatNumber(amount);
+
+        const rect =
+            clickArea.getBoundingClientRect();
+
+        const x =
+            event.clientX - rect.left;
+
+        const y =
+            event.clientY - rect.top;
+
+        element.style.left =
+            x + "px";
+
+        element.style.top =
+            y + "px";
+
+        clickArea.appendChild(element);
+
+        setTimeout(() => {
+            element.remove();
+        }, 900);
+    }
+
+
+    /* =========================================
+       PARTICLES
+    ========================================= */
+
+    function createParticles(event) {
+
+        const particleCount = 15;
+
+        for (let i = 0; i < particleCount; i++) {
+
+            const particle =
+                document.createElement("div");
+
+            particle.className = "particle";
+
+            particle.style.left =
+                event.clientX + "px";
+
+            particle.style.top =
+                event.clientY + "px";
+
+            const angle =
+                Math.random() * Math.PI * 2;
+
+            const distance =
+                50 + Math.random() * 100;
+
+            const x =
+                Math.cos(angle) * distance;
+
+            const y =
+                Math.sin(angle) * distance;
+
+            particle.style.setProperty(
+                "--x",
+                x + "px"
+            );
+
+            particle.style.setProperty(
+                "--y",
+                y + "px"
+            );
+
+            particle.style.setProperty(
+                "--rotation",
+                (Math.random() * 720 - 360) + "deg"
+            );
+
+            const size =
+                5 + Math.random() * 8;
+
+            particle.style.width =
+                size + "px";
+
+            particle.style.height =
+                size + "px";
+
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                particle.remove();
+            }, 800);
+        }
+    }
+
+
+    /* =========================================
+       DISPLAY
+    ========================================= */
+
+    function updateDisplay() {
+
+        pointsDisplay.textContent =
+            formatNumber(game.points);
+
+        clickValueDisplay.textContent =
+            formatNumber(game.clickValue);
+
+        doubleCostDisplay.textContent =
+            formatNumber(game.doubleCost);
+
+        doubleLevelDisplay.textContent =
+            game.doubleLevel;
+
+        autoCostDisplay.textContent =
+            formatNumber(game.autoCost);
+
+        autoOwnedDisplay.textContent =
+            game.autoOwned;
+
+        autoValueDisplay.textContent =
+            formatNumber(game.autoValue);
+
+        const pointsPerSecond =
+            game.autoOwned * game.autoValue;
+
+        pointsPerSecondDisplay.textContent =
+            formatNumber(pointsPerSecond);
+
+
+        /* Upgrade availability */
+
+        doubleUpgrade.disabled =
+            game.points < game.doubleCost;
+
+        autoUpgrade.disabled =
+            game.points < game.autoCost;
+
+
+        /* Progress */
+
+        const doublePercent =
+            Math.min(
+                100,
+                (game.points / game.doubleCost) * 100
+            );
+
+        doubleProgress.style.width =
+            doublePercent + "%";
+
+
+        const autoPercent =
+            Math.min(
+                100,
+                (game.points / game.autoCost) * 100
+            );
+
+        autoProgress.style.width =
+            autoPercent + "%";
+    }
+
+
+    /* =========================================
+       SAVE SYSTEM
+    ========================================= */
+
+    function saveGame() {
+
+        game.lastSave = Date.now();
+
+        localStorage.setItem(
+            "clickerGameSave",
+            JSON.stringify(game)
+        );
+    }
+
+
+    function loadGame() {
+
+        const saved =
+            localStorage.getItem("clickerGameSave");
+
+        if (!saved) {
+            updateDisplay();
+            return;
+        }
+
+        try {
+
+            const data =
+                JSON.parse(saved);
+
+            Object.assign(game, data);
+
+            /*
+             * Offline progress
+             */
+
+            const now = Date.now();
+
+            const secondsAway =
+                Math.min(
+                    60 * 60 * 8,
+                    Math.max(
+                        0,
+                        (now - game.lastSave) / 1000
+                    )
+                );
+
+            const offlineIncome =
+                game.autoOwned *
+                game.autoValue *
+                secondsAway;
+
+            game.points += offlineIncome;
+
+        } catch (error) {
+
+            console.error(
+                "Save file could not be loaded.",
+                error
+            );
+        }
+
+        updateDisplay();
+    }
+
+
+    /* =========================================
+       SAVE BUTTON
+    ========================================= */
+
+    saveButton.addEventListener("click", function() {
+
+        saveGame();
+
+        saveButton.textContent = "SAVED!";
+
+        setTimeout(() => {
+            saveButton.textContent = "SAVE";
+        }, 1000);
+    });
+
+
+    /* =========================================
+       RESET
+    ========================================= */
+
+    resetButton.addEventListener("click", function() {
+
+        const confirmed =
+            confirm(
+                "Reset your entire game?\n\nThis cannot be undone."
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        localStorage.removeItem(
+            "clickerGameSave"
+        );
+
+        location.reload();
+    });
+
+
+    /* =========================================
+       KEYBOARD CONTROLS
+    ========================================= */
+
+    document.addEventListener("keydown", function(event) {
+
+        if (event.code !== "Space") {
+            return;
+        }
+
+        /*
+         * Don't scroll the page when pressing Space.
+         */
+
+        event.preventDefault();
+
+        /*
+         * Create a fake click event around the button.
+         */
+
+        const rect =
+            clickButton.getBoundingClientRect();
+
+        const fakeEvent = {
+            clientX:
+                rect.left + rect.width / 2,
+
+            clientY:
+                rect.top + rect.height / 2
+        };
+
+        game.points += game.clickValue;
+
+        animateButton();
+        createFloatingPoints(
+            fakeEvent,
+            game.clickValue
+        );
+
+        createParticles(fakeEvent);
+
+        updateDisplay();
+    });
+
+
+    /* =========================================
+       AUTOMATIC SAVING
+    ========================================= */
+
+    setInterval(function() {
+        saveGame();
+    }, 5000);
+
+
+    /* =========================================
+       SAVE WHEN LEAVING
+    ========================================= */
+
+    window.addEventListener(
+        "beforeunload",
+        saveGame
+    );
+
+
+    /* =========================================
+       START GAME
+    ========================================= */
+
+    loadGame();
+
+</script>
+
 </body>
 </html>
+```
