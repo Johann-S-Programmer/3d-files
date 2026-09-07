@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Playable Piano</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; background:#171717; color:#eee;
+  font-family:Arial,Helvetica,sans-serif; display:flex; align-items:center;
+  justify-content:center; padding:24px; user-select:none;
+}
+.piano-wrap{
+  width:min(1100px,100%); background:#292929; padding:22px;
+  border-radius:16px; box-shadow:0 18px 45px #000, inset 0 1px #555;
+}
+.top{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:15px; margin-bottom:18px; flex-wrap:wrap;
+}
+h1{margin:0;font-size:24px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,select{
+  background:#444;color:#fff;border:1px solid #666;border-radius:7px;
+  padding:8px 11px;font-size:14px;cursor:pointer;
+}
+button:hover,select:hover{background:#505050}
+.display{
+  min-width:190px;background:#090909;color:#62ff72;border:2px solid #111;
+  border-radius:7px;padding:9px 12px;font-family:monospace;text-align:center;
+}
+.keyboard{
+  touch-action:none;
+  position:relative; height:330px; background:#111; padding:8px;
+  border-radius:10px; overflow:hidden;
+}
+.keys{position:relative;width:100%;height:100%}
+.white{
+  position:absolute;top:0;height:100%;background:linear-gradient(#fff,#e5e5e5);
+  border:1px solid #aaa;border-radius:0 0 7px 7px;
+  color:#222;display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:14px;font-size:13px;cursor:pointer;z-index:1;
+  box-shadow:0 3px 2px #000;
+}
+.white.active{background:#b9d7ff;transform:translateY(2px);box-shadow:0 1px 1px #000}
+.black{
+  position:absolute;top:0;height:61%;background:linear-gradient(90deg,#333,#050505 45%,#222);
+  border:1px solid #000;border-radius:0 0 5px 5px;color:#aaa;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:9px;
+  font-size:10px;cursor:pointer;z-index:3;box-shadow:0 4px 4px #000;
+}
+.black.active{background:linear-gradient(#555,#111);transform:translateY(2px)}
+.help{margin-top:14px;color:#aaa;font-size:13px;line-height:1.5}
+kbd{background:#333;border:1px solid #555;border-radius:4px;padding:2px 5px;color:#fff}
+@media(max-width:650px){
+  body{padding:8px}.piano-wrap{padding:12px}.keyboard{height:250px}
+  .white{padding-bottom:8px;font-size:9px}.black{font-size:0}
+}
+</style>
+</head>
+<body>
+<div class="piano-wrap">
+  <div class="top">
+    <h1>Playable Piano</h1>
+    <div class="controls">
+      <select id="wave">
+        <option value="triangle">Piano-ish</option>
+        <option value="sine">Sine</option>
+        <option value="square">Square</option>
+        <option value="sawtooth">Organ-ish</option>
+      </select>
+      <button id="sustain">Sustain: Off</button>
+      <button id="octDown">Oct −</button>
+      <button id="octUp">Oct +</button>
+      <div class="display" id="display">C4 · Ready</div>
+    </div>
+  </div>
+
+  <div class="keyboard" id="keyboard"><div class="keys" id="keys"></div></div>
+
+  <div class="help">
+    Play with your mouse, touch, or computer keyboard.
+    White keys: <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd>.
+    Black keys: <kbd>W</kbd><kbd>E</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd>.
+    Use <kbd>Z</kbd>/<kbd>X</kbd> to change octave. Audio starts after your first interaction.
+  </div>
+</div>
+
+<script>
+const keysEl=document.getElementById("keys");
+const display=document.getElementById("display");
+const wave=document.getElementById("wave");
+const sustainBtn=document.getElementById("sustain");
+let audioCtx=null, sustain=false, octave=4;
+const active=new Map();
+const keyMap={
+  'a':0,'w':1,'s':2,'e':3,'d':4,'f':5,'t':6,'g':7,'y':8,'h':9,'u':10,'j':11,'k':12
+};
+const names=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B','C'];
+
+function ensureAudio(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+}
+function freq(semitone){
+  return 440*Math.pow(2,(octave*12+semitone-57)/12);
+}
+function noteName(n){
+  return names[n]+(octave+Math.floor(n/12));
+}
+function startNote(n,el){
+  ensureAudio();
+  if(active.has(n)) return;
+  const now=audioCtx.currentTime, f=freq(n);
+  const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
+  osc.type=wave.value;
+  osc.frequency.value=f;
+  gain.gain.setValueAtTime(0.0001,now);
+  gain.gain.exponentialRampToValueAtTime(0.22,now+0.012);
+  gain.gain.exponentialRampToValueAtTime(0.12,now+0.18);
+  osc.connect(gain); gain.connect(audioCtx.destination); osc.start();
+  active.set(n,{osc,gain,el});
+  el.classList.add('active');
+  display.textContent=noteName(n)+' · '+Math.round(f)+' Hz';
+}
+function stopNote(n){
+  const v=active.get(n); if(!v)return;
+  if(sustain)return;
+  const now=audioCtx.currentTime;
+  v.gain.gain.cancelScheduledValues(now);
+  v.gain.gain.setTargetAtTime(0.0001,now,0.06);
+  v.osc.stop(now+0.3);
+  v.el.classList.remove('active');
+  active.delete(n);
+}
+function releaseAll(){
+  for(const n of [...active.keys()]){
+    const v=active.get(n);
+    if(v){
+      const now=audioCtx.currentTime;
+      v.gain.gain.setTargetAtTime(0.0001,now,0.05);
+      v.osc.stop(now+0.25); v.el.classList.remove('active');
+    }
+    active.delete(n);
+  }
+}
+function build(){
+  keysEl.innerHTML='';
+  const whites=[0,2,4,5,7,9,11,12];
+  whites.forEach((n,i)=>{
+    const el=document.createElement('div'); el.className='white';
+    el.style.left=(i*12.5)+'%'; el.style.width='12.5%';
+    el.textContent=names[n];
+    bind(el,n); keysEl.appendChild(el);
+  });
+  const blacks=[{n:1,pos:0},{n:3,pos:1},{n:6,pos:3},{n:8,pos:4},{n:10,pos:5}];
+  blacks.forEach(({n,pos})=>{
+    const el=document.createElement('div'); el.className='black';
+    el.style.left=((pos+1)*12.5-3.1)+'%'; el.style.width='6.2%';
+    el.textContent=names[n];
+    bind(el,n); keysEl.appendChild(el);
+  });
+}
+let dragging = false;
+let dragNote = null;
+
+function stopDragNote(){
+  if(dragNote !== null){
+    stopNote(dragNote);
+    dragNote = null;
+  }
+}
+
+function playDraggedKey(el){
+  const n = Number(el.dataset.note);
+  if(dragNote === n) return;
+  stopDragNote();
+  dragNote = n;
+  startNote(n, el);
+}
+
+function bind(el,n){
+  el.dataset.note = n;
+
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    dragging = true;
+    el.setPointerCapture?.(e.pointerId);
+    playDraggedKey(el);
+  });
+
+  el.addEventListener('pointerenter', e => {
+    if(dragging) playDraggedKey(el);
+  });
+
+  el.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const key = under?.closest('.white,.black');
+    if(key && keysEl.contains(key)) playDraggedKey(key);
+    else stopDragNote();
+  });
+
+  el.addEventListener('pointerup', e => {
+    dragging = false;
+    stopDragNote();
+    try { el.releasePointerCapture?.(e.pointerId); } catch {}
+  });
+
+  el.addEventListener('pointercancel', () => {
+    dragging = false;
+    stopDragNote();
+  });
+}
+
+document.addEventListener('pointerup', () => {
+  if(dragging){
+    dragging = false;
+    stopDragNote();
+  }
+});
+document.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(e.repeat)return;
+  if(k==='z'){octave=Math.max(1,octave-1);display.textContent='Octave '+octave;return}
+  if(k==='x'){octave=Math.min(7,octave+1);display.textContent='Octave '+octave;return}
+  if(keyMap[k]!==undefined){
+    e.preventDefault();
+    const n=keyMap[k], el=[...document.querySelectorAll('.white,.black')].find(x=>x.textContent===names[n] || x.dataset.n==n);
+    // use note index directly by storing it below
+    const target=document.querySelector('[data-note="'+n+'"]');
+    startNote(n,target);
+  }
+});
+document.addEventListener('keyup',e=>{
+  const k=e.key.toLowerCase();
+  if(keyMap[k]!==undefined) stopNote(keyMap[k]);
+});
+sustainBtn.onclick=()=>{
+  sustain=!sustain;
+  sustainBtn.textContent='Sustain: '+(sustain?'On':'Off');
+  if(!sustain) releaseAll();
+};
+octDown.onclick=()=>{octave=Math.max(1,octave-1);display.textContent='Octave '+octave};
+octUp.onclick=()=>{octave=Math.min(7,octave+1);display.textContent='Octave '+octave};
+
+const oldBind=bind;
+bind=function(el,n){el.dataset.note=n;oldBind(el,n)};
+build();
+</script>
+</body>
+</html>
