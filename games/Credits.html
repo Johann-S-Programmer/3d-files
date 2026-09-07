@@ -1,256 +1,1162 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Hello, world.</title>
+
 <style>
-body{
-  margin:0;
-  background:white;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-  overflow:hidden;
-  font-family:monospace;
+
+/* =========================================================
+   BASE
+========================================================= */
+
+* {
+    box-sizing: border-box;
 }
 
-/* CAMERA */
-.scene{
-  margin-top:80px;
-  transform-origin:center top;
-  transform:scale(3.5);
-  transition:transform 3.5s ease;
-  position:relative;
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
 }
 
-/* ROBOT */
-.robot{
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+body {
+    margin: 0;
+    background: white;
+    color: #111;
+    overflow: hidden;
+
+    font-family:
+        Consolas,
+        "Courier New",
+        monospace;
 }
 
-/* HEAD */
-.head{
-  width:200px;
-  height:150px;
-  background:#e6e6e6;
-  border:6px solid black;
-  border-radius:20px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  position:relative;
+
+/* =========================================================
+   SCENE
+========================================================= */
+
+.scene {
+    position: absolute;
+
+    left: 50%;
+    top: 80px;
+
+    width: 1100px;
+    height: 500px;
+
+    transform:
+        translateX(-50%)
+        scale(3.2);
+
+    transform-origin: 300px 120px;
+
+    transition:
+        transform 3.5s cubic-bezier(.2,.8,.2,1);
 }
 
-/* SCREEN */
-.screen{
-  width:160px;
-  height:100px;
-  background:black;
-  border:6px solid black;
-  border-radius:12px;
-  position:relative;
-  overflow:hidden;
-  color:#00ff88;
-  font-size:10px;
-  padding:6px;
+
+/* =========================================================
+   ROBOT
+========================================================= */
+
+.robot {
+    position: absolute;
+
+    left: 70px;
+    top: 0;
+
+    width: 200px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    animation:
+        idle 4s ease-in-out infinite;
 }
 
-.bootText{
-  opacity:0;
-  white-space:pre-line;
+@keyframes idle {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
 }
 
-/* EYES */
-.eye{
-  position:absolute;
-  width:38px;
-  height:24px;
-  background:#00c2d1;
-  border-radius:12px;
-  top:30px;
-  opacity:0;
+
+/* =========================================================
+   HEAD
+========================================================= */
+
+.head {
+    position: relative;
+
+    width: 200px;
+    height: 150px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fafafa,
+            #dedede
+        );
+
+    border: 6px solid #111;
+
+    border-radius: 20px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-shadow:
+        5px 6px 0 #111;
 }
 
-.eye.left{ left:30px; }
-.eye.right{ right:30px; }
 
-/* MOUTH */
-.mouth{
-  position:absolute;
-  bottom:22px;
-  left:50%;
-  transform:translateX(-50%);
-  width:60px;
-  height:8px;
-  background:#00c2d1;
-  border-radius:20px;
-  opacity:0;
-  transition:height 0.05s linear;
+/* =========================================================
+   SCREEN
+========================================================= */
+
+.screen {
+    position: relative;
+
+    width: 160px;
+    height: 100px;
+
+    background: #000;
+
+    border: 6px solid #000;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    color: #00ff88;
+
+    font-size: 10px;
+    line-height: 13px;
+
+    padding: 6px;
+
+    box-shadow:
+        inset 0 0 18px rgba(0,255,120,.15);
 }
 
-/* BODY */
-.body{
-  width:170px;
-  height:180px;
-  background:#f0f0f0;
-  border:6px solid black;
-  border-radius:25px;
-  margin-top:15px;
+
+/* CRT SCANLINES */
+
+.screen::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(255,255,255,.035) 0px,
+            rgba(255,255,255,.035) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+
+    z-index: 20;
 }
 
-/* ARMS */
-.arm{
-  position:absolute;
-  width:40px;
-  height:140px;
-  background:#f0f0f0;
-  border:6px solid black;
-  border-radius:20px;
-  top:170px;
-  transform-origin: top center; /* shoulder pivot */
+
+/* CRT GLOW */
+
+.screen::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 40%,
+            rgba(0,255,100,.08)
+        );
+
+    z-index: 19;
 }
 
-.arm.left{ left:-60px; }
-.arm.right{ right:-60px; transform:rotate(0deg); }
 
-/* TEXTBOX: positioned next to head */
-.textbox{
-  position:absolute;
-  left:220px; /* right next to head */
-  top:15px;    /* slightly above top of head */
-  padding:18px 28px;
-  background:white;
-  border:6px solid black;
-  border-radius:20px;
-  font-size:22px;
-  opacity:0;
-  transform:translateY(0);
-  transition:0.8s;
+/* =========================================================
+   BOOT TEXT
+========================================================= */
+
+.bootText {
+    position: absolute;
+
+    left: 6px;
+    top: 6px;
+
+    white-space: pre-line;
+
+    opacity: 0;
+
+    z-index: 5;
 }
 
-/* ANIMATIONS */
-@keyframes flicker{
-  0%{background:black;}
-  25%{background:#022;}
-  50%{background:black;}
-  75%{background:#033;}
-  100%{background:black;}
+
+/* =========================================================
+   EYES
+========================================================= */
+
+.eye {
+    position: absolute;
+
+    top: 28px;
+
+    width: 38px;
+    height: 24px;
+
+    background: #00c2d1;
+
+    border-radius: 12px;
+
+    opacity: 0;
+
+    box-shadow:
+        0 0 8px rgba(0,194,209,.7);
+
+    transform-origin: center;
 }
 
-@keyframes blinkOnce{
-  0%{height:24px;}
-  40%{height:4px;}
-  60%{height:4px;}
-  100%{height:24px;}
+.eye.left {
+    left: 24px;
 }
+
+.eye.right {
+    right: 24px;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.body {
+    position: relative;
+
+    width: 170px;
+    height: 180px;
+
+    margin-top: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fafafa,
+            #dedede
+        );
+
+    border: 6px solid #111;
+
+    border-radius: 25px;
+
+    box-shadow:
+        5px 6px 0 #111;
+}
+
+
+/* CHEST LIGHT */
+
+.body::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 35px;
+
+    width: 25px;
+    height: 25px;
+
+    transform: translateX(-50%);
+
+    background: #00c2d1;
+
+    border: 4px solid #111;
+
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 10px rgba(0,194,209,.5);
+}
+
+
+/* =========================================================
+   ARMS
+========================================================= */
+
+.arm {
+    position: absolute;
+
+    top: 165px;
+
+    width: 40px;
+    height: 140px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #dedede,
+            #f3f3f3
+        );
+
+    border: 6px solid #111;
+
+    border-radius: 20px;
+
+    /*
+       VERY IMPORTANT:
+       Pivot is at the shoulder.
+    */
+
+    transform-origin:
+        50% 0%;
+
+    z-index: -1;
+}
+
+
+/* LEFT ARM */
+
+.arm.left {
+    left: -60px;
+}
+
+
+/* RIGHT ARM */
+
+.arm.right {
+    right: -60px;
+}
+
+
+/* =========================================================
+   ARM WAVE
+========================================================= */
+
+/*
+   Motion:
+
+   1. Arm starts down.
+   2. Arm lifts HIGH.
+   3. Arm stays high.
+   4. Wave #1.
+   5. Wave #2.
+   6. Arm stays high.
+   7. Arm lowers.
+
+   The credits are far enough away that the
+   arm cannot reach them.
+*/
+
+.arm.right.wave {
+    animation:
+        waveUp 3.2s ease-in-out forwards;
+}
+
+
+@keyframes waveUp {
+
+    /* -----------------------------------------------------
+       ARM DOWN
+    ----------------------------------------------------- */
+
+    0% {
+        transform:
+            translateY(0)
+            rotate(0deg);
+    }
+
+
+    /* -----------------------------------------------------
+       LIFT
+    ----------------------------------------------------- */
+
+    15% {
+        transform:
+            translateY(-25px)
+            rotate(-145deg);
+    }
+
+
+    /* -----------------------------------------------------
+       HOLD HIGH
+    ----------------------------------------------------- */
+
+    22% {
+        transform:
+            translateY(-25px)
+            rotate(-145deg);
+    }
+
+
+    /* -----------------------------------------------------
+       WAVE #1 — ONE SIDE
+    ----------------------------------------------------- */
+
+    34% {
+        transform:
+            translateY(-25px)
+            rotate(-160deg);
+    }
+
+
+    /* -----------------------------------------------------
+       WAVE #1 — OTHER SIDE
+    ----------------------------------------------------- */
+
+    46% {
+        transform:
+            translateY(-25px)
+            rotate(-130deg);
+    }
+
+
+    /* -----------------------------------------------------
+       WAVE #2 — ONE SIDE
+    ----------------------------------------------------- */
+
+    58% {
+        transform:
+            translateY(-25px)
+            rotate(-160deg);
+    }
+
+
+    /* -----------------------------------------------------
+       WAVE #2 — OTHER SIDE
+    ----------------------------------------------------- */
+
+    70% {
+        transform:
+            translateY(-25px)
+            rotate(-130deg);
+    }
+
+
+    /* -----------------------------------------------------
+       RETURN TO CENTER
+    ----------------------------------------------------- */
+
+    78% {
+        transform:
+            translateY(-25px)
+            rotate(-145deg);
+    }
+
+
+    /* -----------------------------------------------------
+       HOLD
+    ----------------------------------------------------- */
+
+    84% {
+        transform:
+            translateY(-25px)
+            rotate(-145deg);
+    }
+
+
+    /* -----------------------------------------------------
+       LOWER
+    ----------------------------------------------------- */
+
+    100% {
+        transform:
+            translateY(0)
+            rotate(0deg);
+    }
+}
+
+
+/* =========================================================
+   CREDITS
+========================================================= */
+
+.credits {
+    position: absolute;
+
+    /*
+       Moved MUCH farther from robot.
+       This leaves a large empty safety area
+       for the waving arm.
+    */
+
+    left: 500px;
+    top: 35px;
+
+    width: 390px;
+
+    opacity: 0;
+
+    transform:
+        translateX(35px);
+
+    transition:
+        opacity 1.2s ease,
+        transform 1.2s ease;
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.credits-title {
+    margin: 0 0 22px;
+
+    font-size: 30px;
+
+    letter-spacing: 4px;
+
+    font-weight: normal;
+}
+
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.divider {
+    width: 100%;
+    height: 3px;
+
+    background: #111;
+
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   CREDIT ROW
+========================================================= */
+
+.credit {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: baseline;
+
+    gap: 30px;
+
+    margin: 12px 0;
+
+    font-size: 14px;
+}
+
+
+.credit-label {
+    color: #666;
+}
+
+
+.credit-value {
+    text-align: right;
+}
+
+
+/* =========================================================
+   THANK YOU
+========================================================= */
+
+.thanks {
+    margin-top: 35px;
+
+    font-size: 13px;
+
+    color: #666;
+
+    opacity: 0;
+
+    transform:
+        translateY(8px);
+
+    transition:
+        opacity 1s ease,
+        transform 1s ease;
+}
+
+
+/* =========================================================
+   FLICKER
+========================================================= */
+
+@keyframes flicker {
+
+    0% {
+        opacity: .2;
+        filter: brightness(.4);
+    }
+
+    15% {
+        opacity: 1;
+        filter: brightness(1.8);
+    }
+
+    25% {
+        opacity: .4;
+    }
+
+    40% {
+        opacity: 1;
+        filter: brightness(1.5);
+    }
+
+    60% {
+        opacity: .5;
+    }
+
+    75% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+
+
+/* =========================================================
+   BLINK
+========================================================= */
+
+@keyframes blink {
+
+    0%,
+    100% {
+        height: 24px;
+    }
+
+    45%,
+    55% {
+        height: 3px;
+    }
+}
+
+
+/* =========================================================
+   GLITCH
+========================================================= */
+
+@keyframes glitch {
+
+    0% {
+        transform: translate(0);
+    }
+
+    25% {
+        transform: translate(2px,-1px);
+    }
+
+    50% {
+        transform: translate(-2px,1px);
+    }
+
+    75% {
+        transform: translate(1px,0);
+    }
+
+    100% {
+        transform: translate(0);
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:800px) {
+
+    .scene {
+        top: 70px;
+
+        transform:
+            translateX(-50%)
+            scale(2.3);
+
+        transform-origin:
+            250px 100px;
+    }
+}
+
+
+@media(max-width:600px) {
+
+    .scene {
+        top: 80px;
+
+        transform:
+            translateX(-50%)
+            scale(1.6);
+
+        transform-origin:
+            220px 100px;
+    }
+
+    .credits {
+        left: 380px;
+        width: 300px;
+    }
+
+    .credits-title {
+        font-size: 23px;
+    }
+
+    .credit {
+        font-size: 11px;
+    }
+}
+
 </style>
 </head>
+
+
 <body>
 
+
 <div class="scene" id="scene">
-  <div class="robot">
-    <div class="head">
-      <div class="screen" id="screen">
-        <div class="bootText" id="bootText"></div>
-        <div class="eye left" id="eyeL"></div>
-        <div class="eye right" id="eyeR"></div>
-        <div class="mouth" id="mouth"></div>
-      </div>
+
+
+    <!-- =====================================================
+         ROBOT
+    ====================================================== -->
+
+    <div class="robot">
+
+
+        <!-- HEAD -->
+
+        <div class="head">
+
+            <div
+                class="screen"
+                id="screen">
+
+                <div
+                    class="bootText"
+                    id="bootText">
+                </div>
+
+
+                <div
+                    class="eye left"
+                    id="eyeL">
+                </div>
+
+
+                <div
+                    class="eye right"
+                    id="eyeR">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- BODY -->
+
+        <div class="body"></div>
+
+
+        <!-- LEFT ARM -->
+
+        <div
+            class="arm left">
+        </div>
+
+
+        <!-- RIGHT ARM -->
+
+        <div
+            class="arm right"
+            id="armR">
+        </div>
+
     </div>
 
-    <div class="body"></div>
-    <div class="arm left"></div>
-    <div class="arm right"></div>
-  </div>
 
-  <!-- Textbox next to head -->
-  <div class="textbox" id="textbox">
-    <span id="text"></span>
-  </div>
+    <!-- =====================================================
+         CREDITS
+    ====================================================== -->
+
+    <div
+        class="credits"
+        id="credits">
+
+
+        <h1 class="credits-title">
+            HELLO, WORLD.
+        </h1>
+
+
+        <div class="divider"></div>
+
+
+        <div class="credit">
+
+            <span class="credit-label">
+                Design
+            </span>
+
+            <span class="credit-value">
+                Johann
+            </span>
+
+        </div>
+
+
+        <div class="credit">
+
+            <span class="credit-label">
+                Development
+            </span>
+
+            <span class="credit-value">
+                Johann
+            </span>
+
+        </div>
+
+
+        <div class="credit">
+
+            <span class="credit-label">
+                Code
+            </span>
+
+            <span class="credit-value">
+                HTML / CSS / JS
+            </span>
+
+        </div>
+
+
+        <div class="credit">
+
+            <span class="credit-label">
+                Robot
+            </span>
+
+            <span class="credit-value">
+                NTCC
+            </span>
+
+        </div>
+
+
+        <div class="credit">
+
+            <span class="credit-label">
+                Built with
+            </span>
+
+            <span class="credit-value">
+                Curiosity
+            </span>
+
+        </div>
+
+
+        <div
+            class="thanks"
+            id="thanks">
+
+            Thanks for visiting.
+
+        </div>
+
+
+    </div>
+
 </div>
 
+
 <script>
-const screen = document.getElementById("screen");
-const bootText = document.getElementById("bootText");
-const eyeL = document.getElementById("eyeL");
-const eyeR = document.getElementById("eyeR");
-const mouth = document.getElementById("mouth");
-const scene = document.getElementById("scene");
-const textbox = document.getElementById("textbox");
-const text = document.getElementById("text");
 
-/* LIP SYNC SPEECH */
-function speak(str,i=0){
-  if(i===0) mouth.style.opacity=1;
+/* =========================================================
+   ELEMENTS
+========================================================= */
 
-  if(i>=str.length){
-    mouth.style.height="8px";
-    return;
-  }
+const scene =
+    document.getElementById("scene");
 
-  const c=str[i];
-  text.textContent+=c;
+const screen =
+    document.getElementById("screen");
 
-  let delay=90;
-  let height=14;
+const bootText =
+    document.getElementById("bootText");
 
-  if("aeo".includes(c)) height=28;
-  else if("iu".includes(c)) height=22;
-  else if("mw".includes(c)) height=8;
-  else if(c===" ") { height=6; delay=120; }
-  else if(c===",") { height=6; delay=300; }
+const eyeL =
+    document.getElementById("eyeL");
 
-  mouth.style.height=height+"px";
-  setTimeout(()=>speak(str,i+1),delay);
-}
+const eyeR =
+    document.getElementById("eyeR");
 
-/* BOOT SEQUENCE */
-function bootSequence(lines,i=0){
-  if(i<lines.length){
-    bootText.style.opacity=1;
-    bootText.textContent+=lines[i]+"\n";
-    setTimeout(()=>bootSequence(lines,i+1),300);
-  }else{
-    setTimeout(startEyes,500);
-  }
-}
+const credits =
+    document.getElementById("credits");
 
-function startEyes(){
-  bootText.style.opacity=0;
-  eyeL.style.opacity=1;
-  eyeR.style.opacity=1;
+const thanks =
+    document.getElementById("thanks");
 
-  eyeL.style.animation="blinkOnce 0.5s ease";
-  eyeR.style.animation="blinkOnce 0.5s ease";
+const armR =
+    document.getElementById("armR");
 
-  setTimeout(()=>{
-    scene.style.transform="scale(1)";
-  },900);
 
-  setTimeout(()=>{
-    textbox.style.opacity=1;
-    speak("Hello, it's JS. This was all made by me.");
-  },2400);
-}
+/* =========================================================
+   BOOT TEXT
+========================================================= */
 
-/* START SEQUENCE */
-setTimeout(()=>{
-  screen.style.animation="flicker 1.3s forwards";
-},700);
+const bootLines = [
 
-setTimeout(()=>{
-  bootSequence([
     "NTCC BIOS v2.4",
-    "Memory Check...OK",
-    "Loading AI Core...",
-    "Boot Complete."
-  ]);
-},2000);
+    "----------------",
+    "CPU........OK",
+    "MEMORY.....OK",
+    "DISPLAY....OK",
+    "AI CORE....OK",
+    "",
+    "Loading personality...",
+    "Loading website...",
+    "",
+    "BOOT COMPLETE."
+
+];
+
+
+/* =========================================================
+   BOOT SEQUENCE
+========================================================= */
+
+function boot() {
+
+    bootText.style.opacity = "1";
+
+    let i = 0;
+
+
+    function next() {
+
+        if (i >= bootLines.length) {
+
+            setTimeout(
+                activate,
+                600
+            );
+
+            return;
+        }
+
+
+        bootText.textContent +=
+            bootLines[i] + "\n";
+
+        i++;
+
+
+        setTimeout(
+            next,
+            180
+        );
+    }
+
+
+    next();
+}
+
+
+/* =========================================================
+   ACTIVATION
+========================================================= */
+
+function activate() {
+
+    /*
+        Brief screen glitch.
+    */
+
+    screen.style.animation =
+        "glitch .12s linear 5";
+
+
+    /*
+        Turn on eyes.
+    */
+
+    setTimeout(() => {
+
+        bootText.style.opacity = "0";
+
+        bootText.textContent = "";
+
+        eyeL.style.opacity = "1";
+        eyeR.style.opacity = "1";
+
+        blink();
+
+    }, 250);
+
+
+    /*
+        Camera zooms out.
+    */
+
+    setTimeout(() => {
+
+        scene.style.transform =
+            "translateX(-50%) scale(1)";
+
+    }, 700);
+
+
+    /*
+        Arm lifts and waves exactly twice.
+    */
+
+    setTimeout(() => {
+
+        armR.classList.add("wave");
+
+    }, 2900);
+
+
+    /*
+        Credits appear after the arm
+        has begun its movement.
+    */
+
+    setTimeout(() => {
+
+        credits.style.opacity = "1";
+
+        credits.style.transform =
+            "translateX(0)";
+
+    }, 4000);
+
+
+    /*
+        Final message.
+    */
+
+    setTimeout(() => {
+
+        thanks.style.opacity = "1";
+
+        thanks.style.transform =
+            "translateY(0)";
+
+    }, 6000);
+
+}
+
+
+/* =========================================================
+   BLINK
+========================================================= */
+
+function blink() {
+
+    eyeL.style.animation =
+        "blink .45s ease";
+
+    eyeR.style.animation =
+        "blink .45s ease";
+
+
+    setTimeout(() => {
+
+        eyeL.style.animation = "";
+        eyeR.style.animation = "";
+
+    }, 500);
+}
+
+
+/* =========================================================
+   NATURAL BLINKING
+========================================================= */
+
+function randomBlink() {
+
+    const delay =
+        2500 +
+        Math.random() * 3500;
+
+
+    setTimeout(() => {
+
+        blink();
+
+        randomBlink();
+
+    }, delay);
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+
+/*
+    Initial screen flicker.
+*/
+
+setTimeout(() => {
+
+    screen.style.animation =
+        "flicker 1.3s ease forwards";
+
+}, 500);
+
+
+/*
+    Start BIOS.
+*/
+
+setTimeout(() => {
+
+    boot();
+
+}, 1700);
+
+
+/*
+    Begin natural blinking.
+*/
+
+setTimeout(() => {
+
+    randomBlink();
+
+}, 4500);
+
 </script>
- 
+
 </body>
 </html>
