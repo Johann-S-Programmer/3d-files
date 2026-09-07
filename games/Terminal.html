@@ -1,388 +1,1558 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Terminal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal BIOS</title>
+
 <style>
+* {
+    box-sizing: border-box;
+}
+
+html,
 body {
-  background:black;
-  color:#00ff00;
-  font-family:'Courier New', monospace;
-  font-size:18px;
-  letter-spacing:1px;
-  line-height:1.4em;
-  margin:0;
-  padding:10px;
-  overflow-x:hidden;
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    background: #000;
 }
-#terminal { white-space:pre-wrap; }
-#terminal div {
-  text-shadow:0 0 3px #00ff00;
-  opacity:0.95;
-  transition:opacity 0.1s;
-  position:relative;
+
+body {
+    color: #00ff66;
+    font-family: "Courier New", monospace;
+    font-size: 17px;
+    line-height: 1.35;
+    letter-spacing: .5px;
+    padding: 12px;
+    overflow-x: hidden;
+    text-shadow: 0 0 4px rgba(0,255,80,.65);
 }
-#terminal div.flicker { animation: flicker 0.15s infinite; }
-@keyframes flicker {
-  0%,100% {opacity:0.9;}
-  50% {opacity:1;}
+
+#terminal {
+    white-space: pre-wrap;
+    min-height: 100vh;
 }
+
+.line {
+    min-height: 23px;
+}
+
+.dim {
+    color: #008f3c;
+    text-shadow: none;
+}
+
+.bright {
+    color: #66ff99;
+}
+
+.warning {
+    color: #ffff00;
+    text-shadow: 0 0 4px rgba(255,255,0,.5);
+}
+
+.error {
+    color: #ff4444;
+    text-shadow: 0 0 4px rgba(255,0,0,.5);
+}
+
+.header {
+    color: #ffffff;
+    text-shadow: 0 0 5px rgba(255,255,255,.4);
+}
+
+.prompt-line {
+    display: flex;
+    align-items: center;
+    white-space: pre;
+}
+
+.prompt {
+    color: #00ff66;
+}
+
 input {
-  background:black;
-  color:#00ff00;
-  border:none;
-  outline:none;
-  font-family:'Courier New', monospace;
-  font-size:18px;
-  text-shadow:0 0 3px #00ff00;
-  letter-spacing:1px;
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    padding: 0;
+    margin: 0;
+    color: #00ff66;
+    font-family: "Courier New", monospace;
+    font-size: 17px;
+    letter-spacing: .5px;
+    text-shadow: 0 0 4px rgba(0,255,80,.65);
+    caret-color: #00ff66;
 }
-.matrix { position:fixed; top:0; left:0; z-index:-1; }
+
+#cursor {
+    display: inline-block;
+    width: 9px;
+    height: 18px;
+    background: #00ff66;
+    vertical-align: middle;
+    animation: cursorBlink 1s steps(1) infinite;
+}
+
+@keyframes cursorBlink {
+    0%, 49% {
+        opacity: 1;
+    }
+
+    50%, 100% {
+        opacity: 0;
+    }
+}
+
+/* CRT */
+body.crt::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(255,255,255,.025) 0px,
+            rgba(255,255,255,.025) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+}
+
+body.crt::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    box-shadow: inset 0 0 100px rgba(0,255,80,.06);
+}
+
+/* BIOS logo */
+.ascii-logo {
+    color: #66ff99;
+    margin-bottom: 12px;
+}
+
+/* Progress bar */
+.progress {
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.boot-complete {
+    color: #66ff99;
+}
+
+/* Matrix */
+.matrix {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: .16;
+    pointer-events: none;
+}
 </style>
 </head>
+
 <body>
+
 <div id="terminal"></div>
+
 <script>
-const terminal=document.getElementById("terminal");
-let userName="";
-let currentInput=null;
-let commandCount=0;
-let corruptionLevel=0; // default glitch
-let knownUsers=JSON.parse(localStorage.getItem("terminal_knownUsers"))||{};
-let aiData=JSON.parse(localStorage.getItem("terminal_aiData"))||{
-    name:["Bob","Frank","John","Mike","Steve","Dave","Tom","Mark","Gary","Paul"][Math.floor(Math.random()*10)],
-    knowledge:{}
-};
-const memoryPhrases=[
-    "You come here often.",
-    "I notice you like using Google.",
-    "You've played Snake a lot.",
-    "Good to see you back.",
-    "I recall our previous chats."
-];
-let aiActive=false;
+"use strict";
 
-// ---------------- GLITCH ----------------
-function glitchText(text,level=1){
-    const map1={a:'4',e:'3',i:'1',o:'0',s:'5',t:'7'};
-    const map2={r:'®',c:'ç',l:'1',z:'2',g:'9',b:'8'};
-    const symbols=['~','*','#','^','%','!'];
-    let result='';
-    for(let i=0;i<text.length;i++){
-        let c=text[i]; let lower=c.toLowerCase();
-        if(level>=1 && map1[lower] && Math.random()<0.4) c=map1[lower];
-        if(level>=2 && map2[lower] && Math.random()<0.3) c=map2[lower];
-        if(level>=3 && Math.random()<0.1) c+=symbols[Math.floor(Math.random()*symbols.length)];
-        if(level>=4 && Math.random()<0.05) c+=c;
-        if(level>=5 && Math.random()<0.05) c=' ';
-        result+=c;
+/* =========================================================
+   TERMINAL CORE
+========================================================= */
+
+const terminal = document.getElementById("terminal");
+
+let userName = "";
+let commandCount = 0;
+let aiActive = false;
+let terminalRunning = false;
+let currentInput = null;
+
+const STORAGE_USERS = "terminal_knownUsers";
+const STORAGE_AI = "terminal_aiData";
+const STORAGE_SETTINGS = "terminal_settings";
+
+let knownUsers = loadJSON(STORAGE_USERS, {});
+
+let aiData = loadJSON(STORAGE_AI, {
+    name: [
+        "NODE",
+        "ATLAS",
+        "NEXUS",
+        "ORBIT",
+        "CORE",
+        "UNIT-7",
+        "TERMINAL"
+    ][Math.floor(Math.random() * 7)],
+    knowledge: {}
+});
+
+let settings = loadJSON(STORAGE_SETTINGS, {
+    crt: false,
+    commandHistory: []
+});
+
+function loadJSON(key, fallback) {
+    try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : fallback;
+    } catch {
+        return fallback;
     }
-    if(level>=3 && Math.random()<0.1) result=" "+result;
-    return result;
-}
-function scrambleLine(lineDiv){
-    if(!lineDiv) return;
-    const original=lineDiv.textContent;
-    let interval=setInterval(()=>{
-        let scrambled = original.split('').map(c=>{
-            if(Math.random()<0.5) return String.fromCharCode(33 + Math.floor(Math.random()*94));
-            return c;
-        }).join('');
-        lineDiv.textContent=scrambled;
-    },50);
-    setTimeout(()=>{clearInterval(interval);lineDiv.textContent=original;},500);
 }
 
-// ---------------- PRINT ----------------
-function print(text=""){
-    let level=Math.floor(commandCount/10);
-    if(corruptionLevel>0) text=glitchText(text,level);
-    const div=document.createElement("div");
-    div.textContent=text;
-    if(Math.random()<0.1) div.classList.add("flicker");
+function saveState() {
+    localStorage.setItem(STORAGE_USERS, JSON.stringify(knownUsers));
+    localStorage.setItem(STORAGE_AI, JSON.stringify(aiData));
+    localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
+}
+
+
+/* =========================================================
+   OUTPUT
+========================================================= */
+
+function print(text = "", className = "") {
+    const div = document.createElement("div");
+
+    div.className = "line " + className;
+    div.textContent = text;
+
     terminal.appendChild(div);
-    window.scrollTo(0,document.body.scrollHeight);
-    if(corruptionLevel>=5 && Math.random()<0.3) scrambleLine(div);
-    localStorage.setItem("terminal_aiData",JSON.stringify(aiData));
-}
 
-// ---------------- INPUT ----------------
-function createInputLine(){
-    if(aiActive) return;
-    const line=document.createElement("div");
-    const span=document.createElement("span");
-    span.textContent="C:\\>";
-    const input=document.createElement("input");
-    input.autofocus=true;
-    input.addEventListener("keydown",function(e){
-        if(e.key==="Enter"){
-            const value=input.value;
-            print(span.textContent+" "+value);
-            line.remove();
-            handleCommand(value.trim());
-        }
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "instant"
     });
-    line.appendChild(span);
-    line.appendChild(input);
-    terminal.appendChild(line);
-    input.focus();
-    currentInput=input;
+
+    return div;
 }
 
-// ---------------- BOOT ----------------
-function bootSequence(){
-    const lines=[
-        "Terminal BIOS v1.0",
-        "Checking memory...",
-        "Memory OK",
-        "Loading kernel...",
-        "Initializing AI core...",
-        "Mounting filesystem...",
-        "Starting services...",
-        "Boot successful."
-    ];
-    let i=0;
-    function nextLine(){
-        if(i<lines.length){
-            print(glitchText(lines[i],1));
-            i++;
-            setTimeout(nextLine,400);
-        } else bootLoadingBar();
+function printHTML(html, className = "") {
+    const div = document.createElement("div");
+
+    div.className = "line " + className;
+    div.innerHTML = html;
+
+    terminal.appendChild(div);
+
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "instant"
+    });
+
+    return div;
+}
+
+function clearTerminal() {
+    terminal.innerHTML = "";
+}
+
+
+/* =========================================================
+   DELAY
+   One controlled async delay system.
+   No recursive timers.
+========================================================= */
+
+function sleep(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}
+
+
+/* =========================================================
+   BIOS
+========================================================= */
+
+const BIOS = {
+    version: "TERMINAL BIOS v2.7.14",
+    vendor: "TERMINAL SYSTEMS",
+    cpu: "x86-64 Compatible CPU",
+    memory: "16384 MB",
+    video: "VGA Compatible Graphics Adapter",
+    storage: "VIRTUAL NVMe STORAGE",
+    bootDevice: "NVMe0",
+    kernel: "TERMINAL-KERNEL 6.4.21"
+};
+
+async function bootSequence() {
+
+    terminalRunning = false;
+    currentInput = null;
+
+    clearTerminal();
+
+    print("TERMINAL SYSTEMS", "header");
+    print("Firmware Initialization Utility", "dim");
+    print("");
+
+    await sleep(180);
+
+    print(BIOS.version);
+    print("Copyright (C) Terminal Systems");
+    print("");
+
+    await sleep(180);
+
+    print("CPU........................ " + BIOS.cpu);
+    await sleep(120);
+
+    print("CPU CLOCK.................. 3.60 GHz");
+    await sleep(120);
+
+    print("CPU CORES.................. 8");
+    await sleep(120);
+
+    print("CPU FEATURES............... SSE SSE2 SSE3 SSSE3 AVX AVX2");
+    await sleep(120);
+
+    print("");
+
+    print("Performing POST...");
+    await sleep(180);
+
+    print("Checking system memory.....", "dim");
+    await sleep(250);
+
+    print("Memory test: 0 MB -> 4096 MB");
+    await sleep(100);
+
+    print("Memory test: 4096 MB -> 8192 MB");
+    await sleep(100);
+
+    print("Memory test: 8192 MB -> 12288 MB");
+    await sleep(100);
+
+    print("Memory test: 12288 MB -> 16384 MB");
+    await sleep(100);
+
+    print("Memory..................... " + BIOS.memory + " OK", "bright");
+
+    await sleep(160);
+
+    print("");
+    print("Detecting hardware...");
+
+    await sleep(140);
+    print("PCI BUS.................... OK");
+
+    await sleep(100);
+    print("USB CONTROLLER............. OK");
+
+    await sleep(100);
+    print("AUDIO DEVICE............... OK");
+
+    await sleep(100);
+    print("NETWORK CONTROLLER......... OK");
+
+    await sleep(100);
+    print("DISPLAY ADAPTER............ " + BIOS.video);
+
+    await sleep(150);
+
+    print("");
+    print("Initializing RTC........... OK");
+    await sleep(80);
+
+    print("Loading CMOS settings...... OK");
+    await sleep(80);
+
+    print("Checking keyboard.......... OK");
+    await sleep(80);
+
+    print("Checking storage...........");
+    await sleep(160);
+
+    print("Drive 0: " + BIOS.storage);
+    await sleep(100);
+
+    print("Capacity................... 512 GB");
+    await sleep(100);
+
+    print("SMART status............... OK");
+    await sleep(100);
+
+    print("");
+    print("Searching for boot device...");
+    await sleep(200);
+
+    print("Boot device found: " + BIOS.bootDevice, "bright");
+
+    await sleep(180);
+
+    print("");
+    print("Initializing bootloader...");
+    await sleep(180);
+
+    print("BOOTX64.EFI................ FOUND");
+    await sleep(100);
+
+    print("Loading kernel.............");
+    await sleep(200);
+
+    print(BIOS.kernel + " OK", "bright");
+
+    await sleep(120);
+
+    print("");
+    print("Initializing kernel subsystems...");
+
+    await sleep(100);
+    print("[ OK ] Process scheduler");
+
+    await sleep(80);
+    print("[ OK ] Virtual memory");
+
+    await sleep(80);
+    print("[ OK ] Device manager");
+
+    await sleep(80);
+    print("[ OK ] Filesystem manager");
+
+    await sleep(80);
+    print("[ OK ] Input subsystem");
+
+    await sleep(80);
+    print("[ OK ] Terminal subsystem");
+
+    await sleep(120);
+
+    print("");
+    print("Starting system services...");
+
+    await sleep(100);
+    print("[ OK ] systemd");
+
+    await sleep(80);
+    print("[ OK ] logging");
+
+    await sleep(80);
+    print("[ OK ] networking");
+
+    await sleep(80);
+    print("[ OK ] local storage");
+
+    await sleep(120);
+
+    print("");
+    print("System initialization complete.", "boot-complete");
+
+    await sleep(350);
+
+    clearTerminal();
+
+    startTerminal();
+}
+
+
+/* =========================================================
+   TERMINAL START
+========================================================= */
+
+function startTerminal() {
+
+    terminalRunning = true;
+
+    print("TERMINAL v2.7");
+    print(BIOS.kernel, "dim");
+    print("Type 'help' for available commands.");
+    print("");
+
+    if (settings.crt) {
+        document.body.classList.add("crt");
     }
-    nextLine();
-}
-function bootLoadingBar(){
-    terminal.innerHTML="";
-    const totalLines=20;
-    let lineIndex=0;
-    const bootInterval=setInterval(()=>{
-        if(lineIndex<totalLines){
-            let level=Math.floor(commandCount/10);
-            print(glitchText("Loading line "+(lineIndex+1),level));
-            lineIndex++;
-        } else {clearInterval(bootInterval); terminal.innerHTML=""; startTerminal();}
-    },120);
-}
 
-// ---------------- AI ----------------
-const builtInAI={"hello":"Hello.","hi":"Hi.","hey":"Hey.","how are you":"I'm fine, thank you.","who are you":"I am Terminal AI.","what are you":"I am a small local AI.","thanks":"You're welcome.","thank you":"No problem.","bye":"Goodbye."};
-function aiLearn(full){
-    const content=full.replace(/^learn\s+/i,"");
-    const parts=content.split("=");
-    if(parts.length<2){print("Usage: learn <phrase> = <answer>");return;}
-    const phrase=parts[0].trim().toLowerCase();
-    const answer=parts.slice(1).join("=").trim();
-    if(!phrase||!answer){print("Invalid format.");return;}
-    aiData.knowledge[phrase]=answer;
-    localStorage.setItem("terminal_aiData",JSON.stringify(aiData));
-    print("Learned: \""+phrase+"\"");
-}
-function aiRespond(full){
-    let msg=full.trim().toLowerCase();
-    if(!msg){print("Talk to me.");return;}
-    if(Math.random()<0.2 && Object.keys(knownUsers).length>0) print(memoryPhrases[Math.floor(Math.random()*memoryPhrases.length)]);
-    if(msg.includes("your name")){print("My name is "+aiData.name+".");return;}
-    if(aiData.knowledge[msg]){print(aiData.knowledge[msg]);return;}
-    if(builtInAI[msg]){print(builtInAI[msg]);return;}
-    for(const key in aiData.knowledge){if(msg.includes(key)){print(aiData.knowledge[key]);return;}}
-    for(const key in builtInAI){if(msg.includes(key)){print(builtInAI[key]);return;}}
-    const defaults=["Interesting.","Tell me more.","Why?","I see.","Explain further."];
-    print(defaults[Math.floor(Math.random()*defaults.length)]);
-}
-async function respondAI(msg){
-    if(corruptionLevel >= 4){ print("AI: ..."); await new Promise(r=>setTimeout(r,500+Math.random()*500)); }
-    aiRespond(msg);
-}
-function openAI(){
-    if(aiActive) return;
-    aiActive=true;
-    print("AI session started. Type 'exit' to close.");
-    const input=document.createElement("input");
-    input.autofocus=true;
-    input.addEventListener("keydown", async function(e){
-        if(e.key==="Enter"){
-            const msg=input.value.trim();
-            if(msg.toLowerCase()==="exit"){aiActive=false; input.remove(); createInputLine(); return;}
-            print("You: "+msg);
-            input.value="";
-            await respondAI(msg);
-        }
-    });
-    terminal.appendChild(input);
-    input.focus();
-}
+    if (!userName) {
+        print("Login required.");
+        print("Username:");
 
-// ---------------- COMMAND HANDLER ----------------
-function handleCommand(cmd){
-    commandCount++;
-    if(commandCount%15===0){corruptionLevel=8; print("System instability detected...");}
-    if(!userName){
-        userName=cmd||"User";
-        print(knownUsers[userName]?"Welcome back, "+userName+".":"Welcome, "+userName+".");
-        knownUsers[userName]=true;
-        localStorage.setItem("terminal_knownUsers",JSON.stringify(knownUsers));
-        createInputLine();
+        createInputLine("> ", value => {
+
+            userName = value.trim() || "User";
+
+            const returning = Boolean(knownUsers[userName]);
+
+            knownUsers[userName] = true;
+            saveState();
+
+            print("");
+
+            if (returning) {
+                print("Authentication accepted.", "bright");
+                print("Welcome back, " + userName + ".");
+            } else {
+                print("User profile created.", "bright");
+                print("Welcome, " + userName + ".");
+            }
+
+            print("");
+
+            createCommandInput();
+        });
+
         return;
     }
-    const base=cmd.split(" ")[0].toLowerCase();
-    switch(base){
-        case "help":
-            print("Commands:");
-            print("help, clear, whoami, whoareyou, echo <text>");
-            print("ai, snake, google, matrix, shutdown, reboot");
-            break;
-        case "clear": terminal.innerHTML=""; break;
-        case "whoami": print(userName); break;
-        case "whoareyou": print("This is Terminal."); break;
-        case "ai": openAI(); return;
-        case "learn": aiLearn(cmd); break;
-        case "snake": startSnake(); return;
-        case "google": startGoogle(); return;
-        case "matrix": startMatrix(); break;
-        case "shutdown": terminal.innerHTML=""; print("SYSTEM OFFLINE"); return;
-        case "reboot": terminal.innerHTML=""; bootSequence(); return;
-        case "glitch":
-            let val=parseInt(cmd.split(" ")[1]);
-            if(isNaN(val)||val<0||val>5){print("Usage: glitch 0-5");} 
-            else {corruptionLevel=val; print("Glitch level set to "+val);}
-            break;
-        case "echo":
-            const echoText=cmd.substring(5);
-            print(echoText);
-            break;
-        default: print("Unknown command.");
-    }
-    createInputLine();
+
+    createCommandInput();
 }
 
-// ---------------- SNAKE ----------------
-function startSnake(){
-    terminal.innerHTML="";
-    print("Snake - Arrow keys. Press q to quit.");
-    const width=20,height=15;
-    let snake=[{x:5,y:5}], dir={x:1,y:0}, food={x:10,y:10}, score=0, running=true;
 
-    function render(){
-        terminal.innerHTML="";
-        for(let y=0;y<height;y++){
-            let line="";
-            for(let x=0;x<width;x++){
-                if(x===0||x===width-1||y===0||y===height-1){
-                    line+="*"; 
-                    continue;
-                }
-                let isHead=snake[0].x===x && snake[0].y===y;
-                let isBody=snake.slice(1).some(s=>s.x===x && s.y===y);
-                if(isHead) line+="@";
-                else if(isBody) line+="o";
-                else if(food.x===x && food.y===y) line+="$";
-                else line+=" ";
-            }
-            print(line);
-        }
-        print("Score: "+score);
-    }
+/* =========================================================
+   INPUT
+========================================================= */
 
-    function update(){
-        if(!running) return;
-        let head={x:snake[0].x+dir.x, y:snake[0].y+dir.y};
-        if(head.x<=0||head.x>=width-1||head.y<=0||head.y>=height-1||
-           snake.some(s=>s.x===head.x && s.y===head.y)){
-            print("Game Over. Press q.");
-            running=false;
+function createInputLine(promptText, callback) {
+
+    const line = document.createElement("div");
+    line.className = "prompt-line";
+
+    const prompt = document.createElement("span");
+    prompt.className = "prompt";
+    prompt.textContent = promptText;
+
+    const input = document.createElement("input");
+
+    input.autocomplete = "off";
+    input.spellcheck = false;
+
+    line.appendChild(prompt);
+    line.appendChild(input);
+
+    terminal.appendChild(line);
+
+    currentInput = input;
+
+    input.focus();
+
+    input.addEventListener("keydown", function(e) {
+
+        if (e.key !== "Enter") {
             return;
         }
+
+        e.preventDefault();
+
+        const value = input.value;
+
+        line.remove();
+
+        currentInput = null;
+
+        callback(value);
+    });
+
+    return input;
+}
+
+
+function createCommandInput() {
+
+    if (!terminalRunning || aiActive || currentInput) {
+        return;
+    }
+
+    createInputLine("C:\\> ", value => {
+
+        commandCount++;
+
+        if (value.trim()) {
+            settings.commandHistory.push(value);
+
+            if (settings.commandHistory.length > 100) {
+                settings.commandHistory.shift();
+            }
+
+            saveState();
+        }
+
+        print("C:\\> " + value);
+
+        handleCommand(value.trim());
+    });
+}
+
+
+/* =========================================================
+   COMMANDS
+========================================================= */
+
+function handleCommand(command) {
+
+    if (!command) {
+        createCommandInput();
+        return;
+    }
+
+    const parts = command.split(/\s+/);
+    const base = parts[0].toLowerCase();
+
+    switch (base) {
+
+        case "help":
+            commandHelp();
+            break;
+
+        case "clear":
+        case "cls":
+            clearTerminal();
+            break;
+
+        case "whoami":
+            print(userName);
+            break;
+
+        case "whoareyou":
+            print("Terminal.");
+            print("A local command-line environment.");
+            break;
+
+        case "echo":
+            print(command.substring(5));
+            break;
+
+        case "ver":
+        case "version":
+            print(BIOS.kernel);
+            print(BIOS.version);
+            break;
+
+        case "date":
+            print(new Date().toString());
+            break;
+
+        case "time":
+            print(new Date().toLocaleTimeString());
+            break;
+
+        case "hostname":
+            print("TERMINAL-PC");
+            break;
+
+        case "systeminfo":
+            systemInfo();
+            break;
+
+        case "memory":
+        case "mem":
+            print("Total memory: " + BIOS.memory);
+            print("Memory status: OK");
+            break;
+
+        case "devices":
+            showDevices();
+            break;
+
+        case "history":
+            showHistory();
+            break;
+
+        case "ai":
+            openAI();
+            return;
+
+        case "learn":
+            aiLearn(command);
+            break;
+
+        case "settings":
+            showSettings();
+            break;
+
+        case "crt":
+            toggleCRT(parts[1]);
+            break;
+
+        case "reboot":
+            reboot();
+            return;
+
+        case "shutdown":
+            shutdown();
+            return;
+
+        case "matrix":
+            startMatrix();
+            return;
+
+        case "google":
+            startGoogle();
+            return;
+
+        case "snake":
+            startSnake();
+            return;
+
+        default:
+            print("'" + base + "' is not recognized as a command.");
+            print("Type 'help' for a list of commands.");
+            break;
+    }
+
+    createCommandInput();
+}
+
+
+/* =========================================================
+   HELP
+========================================================= */
+
+function commandHelp() {
+
+    print("");
+    print("TERMINAL COMMAND REFERENCE", "header");
+    print("--------------------------------");
+
+    print("help          Show this command list");
+    print("clear / cls   Clear the terminal");
+    print("whoami        Display current user");
+    print("whoareyou     Display terminal identity");
+    print("hostname      Display computer hostname");
+    print("ver           Display system version");
+    print("date          Display system date");
+    print("time          Display system time");
+    print("systeminfo    Display hardware information");
+    print("memory        Display memory information");
+    print("devices       List detected devices");
+    print("history       Display command history");
+    print("echo <text>   Print text");
+    print("");
+    print("ai            Start local AI session");
+    print("learn         Teach the local AI");
+    print("");
+    print("settings      Display terminal settings");
+    print("crt on/off    Toggle CRT effect");
+    print("");
+    print("snake         Launch Snake");
+    print("google        Launch text search");
+    print("matrix        Launch Matrix mode");
+    print("");
+    print("reboot        Restart the terminal");
+    print("shutdown      Shut down the system");
+    print("");
+}
+
+
+/* =========================================================
+   SYSTEM INFORMATION
+========================================================= */
+
+function systemInfo() {
+
+    print("");
+    print("SYSTEM INFORMATION", "header");
+    print("------------------");
+
+    print("Hostname............. TERMINAL-PC");
+    print("Architecture......... x86_64");
+    print("Processor............ " + BIOS.cpu);
+    print("Cores................ 8");
+    print("Clock................ 3.60 GHz");
+    print("Memory............... " + BIOS.memory);
+    print("Graphics............. " + BIOS.video);
+    print("Storage.............. " + BIOS.storage);
+    print("Storage capacity..... 512 GB");
+    print("Kernel............... " + BIOS.kernel);
+    print("BIOS................. " + BIOS.version);
+    print("Boot device.......... " + BIOS.bootDevice);
+    print("Network.............. ONLINE");
+}
+
+
+/* =========================================================
+   DEVICES
+========================================================= */
+
+function showDevices() {
+
+    print("");
+    print("DEVICE ENUMERATION", "header");
+    print("------------------");
+
+    print("[00] CPU ..................... ONLINE");
+    print("[01] Memory Controller ....... ONLINE");
+    print("[02] PCI Express ............. ONLINE");
+    print("[03] NVMe Storage ............ ONLINE");
+    print("[04] USB Controller .......... ONLINE");
+    print("[05] Audio Device ............ ONLINE");
+    print("[06] Network Adapter ......... ONLINE");
+    print("[07] Display Adapter ......... ONLINE");
+    print("[08] Keyboard ................ ONLINE");
+    print("[09] RTC ..................... ONLINE");
+}
+
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+function showHistory() {
+
+    if (!settings.commandHistory.length) {
+        print("No command history.");
+        return;
+    }
+
+    print("");
+
+    settings.commandHistory.forEach((cmd, index) => {
+        print(
+            String(index + 1).padStart(3, " ") +
+            "  " +
+            cmd
+        );
+    });
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function showSettings() {
+
+    print("");
+    print("TERMINAL SETTINGS", "header");
+    print("-----------------");
+
+    print("CRT effect........... " + (settings.crt ? "ON" : "OFF"));
+    print("AI memory............ ENABLED");
+    print("Command history...... ENABLED");
+    print("");
+    print("Use 'crt on' or 'crt off' to change CRT mode.");
+}
+
+
+function toggleCRT(value) {
+
+    if (value === "on") {
+
+        settings.crt = true;
+        document.body.classList.add("crt");
+
+        print("CRT effect enabled.");
+        saveState();
+
+        return;
+    }
+
+    if (value === "off") {
+
+        settings.crt = false;
+        document.body.classList.remove("crt");
+
+        print("CRT effect disabled.");
+        saveState();
+
+        return;
+    }
+
+    print("Usage: crt on | crt off");
+}
+
+
+/* =========================================================
+   AI
+========================================================= */
+
+const builtInAI = {
+
+    "hello": "Hello.",
+    "hi": "Hi.",
+    "hey": "Hey.",
+    "how are you": "Operating normally.",
+    "who are you": "I am the local Terminal AI.",
+    "what are you": "A small locally running conversational system.",
+    "thanks": "You're welcome.",
+    "thank you": "No problem.",
+    "bye": "Goodbye.",
+    "what can you do":
+        "I can answer basic questions, remember learned phrases, and interact with the terminal.",
+    "help":
+        "Try asking me something, or use 'learn <phrase> = <answer>'."
+};
+
+
+function aiLearn(full) {
+
+    const content = full.replace(/^learn\s+/i, "");
+
+    const separator = content.indexOf("=");
+
+    if (separator === -1) {
+        print("Usage: learn <phrase> = <answer>");
+        return;
+    }
+
+    const phrase =
+        content.substring(0, separator).trim().toLowerCase();
+
+    const answer =
+        content.substring(separator + 1).trim();
+
+    if (!phrase || !answer) {
+        print("Invalid learning data.");
+        return;
+    }
+
+    aiData.knowledge[phrase] = answer;
+
+    saveState();
+
+    print("AI knowledge updated.");
+    print("Phrase: " + phrase);
+}
+
+
+function aiRespond(message) {
+
+    const msg = message.trim().toLowerCase();
+
+    if (!msg) {
+        print("AI: Please enter something.");
+        return;
+    }
+
+    if (
+        msg.includes("your name") ||
+        msg === "name"
+    ) {
+        print("AI: My designation is " + aiData.name + ".");
+        return;
+    }
+
+    if (aiData.knowledge[msg]) {
+        print("AI: " + aiData.knowledge[msg]);
+        return;
+    }
+
+    if (builtInAI[msg]) {
+        print("AI: " + builtInAI[msg]);
+        return;
+    }
+
+    for (const key in aiData.knowledge) {
+
+        if (msg.includes(key)) {
+            print("AI: " + aiData.knowledge[key]);
+            return;
+        }
+    }
+
+    for (const key in builtInAI) {
+
+        if (msg.includes(key)) {
+            print("AI: " + builtInAI[key]);
+            return;
+        }
+    }
+
+    const responses = [
+        "AI: Interesting.",
+        "AI: I understand.",
+        "AI: Tell me more.",
+        "AI: I don't have enough information for that yet.",
+        "AI: I don't have a stored response for that.",
+        "AI: You can teach me with the learn command."
+    ];
+
+    print(
+        responses[
+            Math.floor(Math.random() * responses.length)
+        ]
+    );
+}
+
+
+function openAI() {
+
+    if (aiActive) {
+        return;
+    }
+
+    aiActive = true;
+
+    print("");
+    print("LOCAL AI SESSION", "header");
+    print("-----------------");
+    print("Model: " + aiData.name);
+    print("Memory: ENABLED");
+    print("Type 'exit' to return.");
+    print("");
+
+    createInputLine("AI> ", async message => {
+
+        if (message.trim().toLowerCase() === "exit") {
+
+            aiActive = false;
+
+            print("");
+            print("AI session terminated.");
+            print("");
+
+            createCommandInput();
+
+            return;
+        }
+
+        print("You: " + message);
+
+        await sleep(150);
+
+        aiRespond(message);
+
+        if (aiActive) {
+            createAIInput();
+        }
+    });
+}
+
+
+function createAIInput() {
+
+    if (!aiActive) {
+        return;
+    }
+
+    createInputLine("AI> ", async message => {
+
+        if (message.trim().toLowerCase() === "exit") {
+
+            aiActive = false;
+
+            print("");
+            print("AI session terminated.");
+            print("");
+
+            createCommandInput();
+
+            return;
+        }
+
+        print("You: " + message);
+
+        await sleep(150);
+
+        aiRespond(message);
+
+        if (aiActive) {
+            createAIInput();
+        }
+    });
+}
+
+
+/* =========================================================
+   REBOOT / SHUTDOWN
+========================================================= */
+
+async function reboot() {
+
+    terminalRunning = false;
+    currentInput = null;
+
+    clearTerminal();
+
+    print("REBOOT REQUESTED");
+    print("");
+    print("Stopping services...");
+
+    await sleep(250);
+
+    print("[ OK ] Terminal services stopped.");
+    await sleep(100);
+
+    print("[ OK ] Filesystem synchronized.");
+    await sleep(100);
+
+    print("[ OK ] Devices released.");
+    await sleep(150);
+
+    print("");
+    print("Restarting...");
+    await sleep(500);
+
+    bootSequence();
+}
+
+
+async function shutdown() {
+
+    terminalRunning = false;
+
+    if (currentInput) {
+        currentInput.blur();
+        currentInput = null;
+    }
+
+    clearTerminal();
+
+    print("TERMINAL SYSTEMS", "header");
+    print("");
+    print("Stopping services...");
+
+    await sleep(200);
+
+    print("[ OK ] User sessions");
+    await sleep(100);
+
+    print("[ OK ] Network");
+    await sleep(100);
+
+    print("[ OK ] Storage");
+    await sleep(100);
+
+    print("[ OK ] Terminal");
+    await sleep(200);
+
+    print("");
+    print("Unmounting filesystems...");
+    await sleep(250);
+
+    print("Filesystem unmounted.");
+    await sleep(150);
+
+    print("");
+    print("SYSTEM HALTED", "header");
+    print("");
+    print("It is now safe to close this window.");
+}
+
+
+/* =========================================================
+   SNAKE
+========================================================= */
+
+function startSnake() {
+
+    terminalRunning = false;
+    clearTerminal();
+
+    print("SNAKE");
+    print("Arrow keys to move. Q to exit.");
+    print("");
+
+    const width = 24;
+    const height = 14;
+
+    let snake = [
+        {x: 5, y: 5},
+        {x: 4, y: 5},
+        {x: 3, y: 5}
+    ];
+
+    let direction = {x: 1, y: 0};
+    let food = randomFood();
+    let score = 0;
+    let running = true;
+    let timer = null;
+
+    function randomFood() {
+
+        return {
+            x: Math.floor(Math.random() * (width - 2)) + 1,
+            y: Math.floor(Math.random() * (height - 2)) + 1
+        };
+    }
+
+    function render() {
+
+        clearTerminal();
+
+        print("SNAKE");
+        print("Score: " + score);
+        print("");
+
+        for (let y = 0; y < height; y++) {
+
+            let row = "";
+
+            for (let x = 0; x < width; x++) {
+
+                if (
+                    x === 0 ||
+                    x === width - 1 ||
+                    y === 0 ||
+                    y === height - 1
+                ) {
+                    row += "#";
+                    continue;
+                }
+
+                if (
+                    snake[0].x === x &&
+                    snake[0].y === y
+                ) {
+                    row += "@";
+                    continue;
+                }
+
+                let body = snake
+                    .slice(1)
+                    .some(segment =>
+                        segment.x === x &&
+                        segment.y === y
+                    );
+
+                if (body) {
+                    row += "o";
+                }
+                else if (
+                    food.x === x &&
+                    food.y === y
+                ) {
+                    row += "*";
+                }
+                else {
+                    row += " ";
+                }
+            }
+
+            print(row);
+        }
+
+        print("");
+        print("Q = quit");
+    }
+
+    function update() {
+
+        if (!running) {
+            return;
+        }
+
+        const head = {
+            x: snake[0].x + direction.x,
+            y: snake[0].y + direction.y
+        };
+
+        if (
+            head.x <= 0 ||
+            head.x >= width - 1 ||
+            head.y <= 0 ||
+            head.y >= height - 1
+        ) {
+            endGame();
+            return;
+        }
+
+        if (
+            snake.some(segment =>
+                segment.x === head.x &&
+                segment.y === head.y
+            )
+        ) {
+            endGame();
+            return;
+        }
+
         snake.unshift(head);
-        if(head.x===food.x && head.y===food.y){
+
+        if (
+            head.x === food.x &&
+            head.y === food.y
+        ) {
+
             score++;
-            food={x:Math.floor(Math.random()*(width-2)+1), y:Math.floor(Math.random()*(height-2)+1)};
-        } else snake.pop();
+            food = randomFood();
+
+        } else {
+
+            snake.pop();
+        }
+
         render();
     }
 
-    function key(e){
-        if(e.key==="ArrowLeft") dir={x:-1,y:0};
-        if(e.key==="ArrowRight") dir={x:1,y:0};
-        if(e.key==="ArrowUp") dir={x:0,y:-1};
-        if(e.key==="ArrowDown") dir={x:0,y:1};
-        if(e.key==="q"){document.removeEventListener("keydown",key); terminal.innerHTML=""; createInputLine();}
+    function endGame() {
+
+        running = false;
+
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+
+        print("");
+        print("GAME OVER");
+        print("Final score: " + score);
+        print("Press Q to return.");
     }
 
-    document.addEventListener("keydown",key);
-    setInterval(update,200);
+    function keyHandler(e) {
+
+        if (e.key === "ArrowUp" && direction.y === 0) {
+            direction = {x: 0, y: -1};
+        }
+
+        if (e.key === "ArrowDown" && direction.y === 0) {
+            direction = {x: 0, y: 1};
+        }
+
+        if (e.key === "ArrowLeft" && direction.x === 0) {
+            direction = {x: -1, y: 0};
+        }
+
+        if (e.key === "ArrowRight" && direction.x === 0) {
+            direction = {x: 1, y: 0};
+        }
+
+        if (e.key.toLowerCase() === "q") {
+
+            running = false;
+
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+
+            document.removeEventListener(
+                "keydown",
+                keyHandler
+            );
+
+            terminalRunning = true;
+
+            clearTerminal();
+
+            createCommandInput();
+        }
+    }
+
+    document.addEventListener(
+        "keydown",
+        keyHandler
+    );
+
+    timer = setInterval(update, 180);
+
     render();
 }
 
-// ---------------- GOOGLE ASCII ----------------
-const googleAscii=`
-   ____                   _      
-  / ___| ___   ___   __ _| | ___ 
- | |  _ / _ \\ / _ \\ / _\` | |/ _ \\
- | |_| | (_) | (_) | (_| | |  __/
-  \\____|\\___/ \\___/ \\__, |_|\\___|
-                     |___/       
-`;
-function startGoogle(){
-    terminal.innerHTML="";
-    print("GOOGLE");
-    print("Loading...");
-    let lines=googleAscii.split("\n");
-    let i=0;
-    const load=setInterval(()=>{
-        if(i<lines.length){print(glitchText(lines[i],Math.floor(commandCount/10)));i++;} 
-        else {clearInterval(load); showSearch();}
-    },150);
-}
-function showSearch(){
-    print("");print("Search:");
-    const input=document.createElement("input");
-    input.addEventListener("keydown",function(e){
-        if(e.key==="Enter"){
-            const query=input.value;
-            print("> "+query);
-            print("Result 1: "+query+" official site");
-            print("Result 2: Learn about "+query);
-            print("Result 3: "+query+" wiki page");
-            print("Press q to exit.");
-            document.addEventListener("keydown",exitGoogle);
+
+/* =========================================================
+   GOOGLE TEXT MODE
+========================================================= */
+
+function startGoogle() {
+
+    terminalRunning = false;
+
+    clearTerminal();
+
+    print("TEXT SEARCH");
+    print("----------------------------");
+    print("Type a search query.");
+    print("Q = exit");
+    print("");
+
+    createInputLine("Search> ", query => {
+
+        if (query.trim().toLowerCase() === "q") {
+            terminalRunning = true;
+            clearTerminal();
+            createCommandInput();
+            return;
         }
+
+        print("");
+        print("Searching for: " + query);
+        print("");
+
+        print("[1] " + query + " - official site");
+        print("[2] " + query + " - information");
+        print("[3] " + query + " - reference");
+        print("");
+        print("Press Q to return.");
+
+        function exitSearch(e) {
+
+            if (e.key.toLowerCase() === "q") {
+
+                document.removeEventListener(
+                    "keydown",
+                    exitSearch
+                );
+
+                terminalRunning = true;
+
+                clearTerminal();
+
+                createCommandInput();
+            }
+        }
+
+        document.addEventListener(
+            "keydown",
+            exitSearch
+        );
     });
-    terminal.appendChild(input);
-    input.focus();
 }
-function exitGoogle(e){if(e.key==="q"){document.removeEventListener("keydown",exitGoogle);terminal.innerHTML="";createInputLine();}}
 
-// ---------------- MATRIX ----------------
-function startMatrix(){
-    const canvas=document.createElement("canvas");
-    canvas.className="matrix";document.body.appendChild(canvas);
-    const ctx=canvas.getContext("2d");
-    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-    const letters="01"; const fontSize=14; const columns=Math.floor(canvas.width/fontSize);
-    const drops=Array(columns).fill(1);
-    let running=true;
-    function loop(){
-        if(!running) return;
-        ctx.fillStyle="rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle="#0f0"; ctx.font=fontSize+"px monospace";
-        for(let i=0;i<drops.length;i++){
-            const text=letters[Math.floor(Math.random()*letters.length)];
-            ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-            if(drops[i]*fontSize>canvas.height && Math.random()>0.975) drops[i]=0;
-            drops[i]++;
+
+/* =========================================================
+   MATRIX
+========================================================= */
+
+function startMatrix() {
+
+    terminalRunning = false;
+
+    clearTerminal();
+
+    print("MATRIX MODE");
+    print("Press Q to exit.");
+    print("");
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "matrix";
+
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+
+    let running = true;
+    let animationFrame = null;
+
+    function resize() {
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    resize();
+
+    window.addEventListener("resize", resize);
+
+    const fontSize = 14;
+
+    function draw() {
+
+        if (!running) {
+            return;
         }
-        requestAnimationFrame(loop);
+
+        ctx.fillStyle = "rgba(0,0,0,.08)";
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        ctx.fillStyle = "#00ff66";
+        ctx.font = fontSize + "px monospace";
+
+        const columns =
+            Math.floor(canvas.width / fontSize);
+
+        const now =
+            Math.floor(Date.now() / 100);
+
+        for (let i = 0; i < columns; i++) {
+
+            const character =
+                Math.random() > .5 ? "0" : "1";
+
+            const y =
+                ((now * (i + 3) * 7) %
+                (canvas.height + 500)) - 500;
+
+            ctx.fillText(
+                character,
+                i * fontSize,
+                y
+            );
+        }
+
+        animationFrame =
+            requestAnimationFrame(draw);
     }
-    loop();
-    function exitMatrix(e){
-        if(e.key==="q"){running=false;document.removeEventListener("keydown",exitMatrix);canvas.remove();createInputLine();}
+
+    draw();
+
+    function exitMatrix(e) {
+
+        if (e.key.toLowerCase() !== "q") {
+            return;
+        }
+
+        running = false;
+
+        if (animationFrame !== null) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+
+        window.removeEventListener(
+            "resize",
+            resize
+        );
+
+        document.removeEventListener(
+            "keydown",
+            exitMatrix
+        );
+
+        canvas.remove();
+
+        terminalRunning = true;
+
+        clearTerminal();
+
+        createCommandInput();
     }
-    document.addEventListener("keydown",exitMatrix);
+
+    document.addEventListener(
+        "keydown",
+        exitMatrix
+    );
 }
 
-// ---------------- START ----------------
-function startTerminal(){print("Welcome to Terminal.");print("Enter your name:");createInputLine();}
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+========================================================= */
+
+document.addEventListener("keydown", function(e) {
+
+    if (
+        e.ctrlKey &&
+        e.altKey &&
+        e.key.toLowerCase() === "l"
+    ) {
+        e.preventDefault();
+
+        clearTerminal();
+
+        print("Terminal screen cleared.");
+
+        if (terminalRunning && !aiActive) {
+            createCommandInput();
+        }
+    }
+});
+
+
+/* =========================================================
+   START
+========================================================= */
+
 bootSequence();
+
 </script>
+
 </body>
 </html>
