@@ -1,312 +1,3201 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Windows 98 Web OS</title>
 
 <style>
 :root{
-  --bg:#008080;
-  --window:#c0c0c0;
-  --title1:#000080;
-  --title2:#1084d0;
+    --desktop:#008080;
+    --window:#c0c0c0;
+    --light:#ffffff;
+    --shadow:#808080;
+    --dark:#000000;
+    --title:#000080;
+    --titleInactive:#808080;
+    --text:#000;
+    --highlight:#000080;
+    --highlightText:#fff;
+    --font:"MS Sans Serif",Tahoma,Arial,sans-serif;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;}
+*{
+    box-sizing:border-box;
+    user-select:none;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    margin:0;
+    overflow:hidden;
+}
+
 body{
-  font-family:"MS Sans Serif",Tahoma;
-  background:var(--bg);
-  overflow:hidden;
-  cursor:url('https://cur.cursors-4u.net/windows/win-4/win394.cur'),auto;
+    background:var(--desktop);
+    color:var(--text);
+    font-family:var(--font);
+    font-size:12px;
 }
 
-/* CRT */
-body::after{
-content:"";
-position:fixed;
-inset:0;
-pointer-events:none;
-background:repeating-linear-gradient(
-to bottom,
-rgba(0,0,0,0.05),
-rgba(0,0,0,0.05) 1px,
-transparent 1px,
-transparent 2px);
+/* =========================
+   DESKTOP
+========================= */
+
+#desktop{
+    position:absolute;
+    inset:0 0 30px 0;
+    overflow:hidden;
+    background:var(--desktop);
 }
 
-/* DESKTOP */
-.desktop{
-position:absolute;
-inset:0 0 28px 0;
-padding:10px;
+.desktop-icon{
+    position:absolute;
+    width:76px;
+    min-height:78px;
+    padding:4px;
+    text-align:center;
+    color:white;
+    cursor:default;
 }
 
-/* ICON */
-.icon{
-width:70px;
-text-align:center;
-color:white;
-font-size:12px;
-margin:10px;
-display:inline-block;
-cursor:pointer;
+.desktop-icon .icon-image{
+    width:38px;
+    height:38px;
+    margin:auto auto 4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:31px;
+    filter:drop-shadow(1px 1px 0 #000);
 }
 
-/* TASKBAR */
-.taskbar{
-position:fixed;
-bottom:0;
-left:0;
-height:28px;
-width:100%;
-background:var(--window);
-border-top:2px solid #fff;
-display:flex;
-align-items:center;
-padding:2px;
+.desktop-icon .icon-label{
+    display:inline-block;
+    padding:1px 3px;
+    line-height:14px;
+    text-shadow:1px 1px #000;
 }
 
-.btn{
-background:var(--window);
-border-top:2px solid #fff;
-border-left:2px solid #fff;
-border-right:2px solid #808080;
-border-bottom:2px solid #808080;
-padding:2px 8px;
-font-size:12px;
-cursor:pointer;
+.desktop-icon.selected .icon-label{
+    background:#000080;
+    color:#fff;
+    text-shadow:none;
 }
 
-.btn:active{
-border-top:2px solid #808080;
-border-left:2px solid #808080;
-border-right:2px solid #fff;
-border-bottom:2px solid #fff;
+/* =========================
+   TASKBAR
+========================= */
+
+#taskbar{
+    position:fixed;
+    z-index:9000;
+    left:0;
+    right:0;
+    bottom:0;
+    height:30px;
+
+    display:flex;
+    align-items:center;
+
+    padding:2px;
+
+    background:var(--window);
+
+    border-top:2px solid var(--light);
 }
+
+#startButton{
+    height:24px;
+    min-width:76px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+
+    font-weight:bold;
+}
+
+.start-logo{
+    width:16px;
+    height:16px;
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr;
+
+    transform:skewY(-8deg);
+}
+
+.start-logo span:nth-child(1){background:#f00;}
+.start-logo span:nth-child(2){background:#00a000;}
+.start-logo span:nth-child(3){background:#0000ff;}
+.start-logo span:nth-child(4){background:#ffff00;}
 
 #taskbarTabs{
-flex:1;
-display:flex;
-gap:2px;
-margin-left:4px;
+    flex:1;
+    display:flex;
+    gap:2px;
+    margin-left:4px;
+    height:24px;
+    overflow:hidden;
 }
 
-.clock{
-width:60px;
-text-align:center;
-font-size:12px;
-border:2px inset #c0c0c0;
+.task-button{
+    min-width:120px;
+    max-width:180px;
+
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+
+    text-align:left;
+    padding:3px 8px;
+    font-size:11px;
 }
 
-/* START MENU */
+.task-button.active{
+    border-top-color:#808080;
+    border-left-color:#808080;
+    border-right-color:#fff;
+    border-bottom-color:#fff;
+    background:#d0d0d0;
+}
+
+#tray{
+    height:24px;
+    min-width:90px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    border:2px inset #c0c0c0;
+    margin-left:3px;
+}
+
+.tray-icon{
+    font-size:13px;
+}
+
+#clock{
+    min-width:67px;
+    text-align:center;
+    font-size:11px;
+}
+
+/* =========================
+   CLASSIC BUTTON
+========================= */
+
+.win-button{
+    background:var(--window);
+    border-top:2px solid var(--light);
+    border-left:2px solid var(--light);
+    border-right:2px solid var(--shadow);
+    border-bottom:2px solid var(--shadow);
+
+    padding:3px 10px;
+
+    font-family:var(--font);
+    font-size:11px;
+}
+
+.win-button:active{
+    border-top-color:var(--shadow);
+    border-left-color:var(--shadow);
+    border-right-color:var(--light);
+    border-bottom-color:var(--light);
+}
+
+.win-button:focus{
+    outline:1px dotted #000;
+    outline-offset:-4px;
+}
+
+/* =========================
+   START MENU
+========================= */
+
 #startMenu{
-position:fixed;
-bottom:28px;
-left:0;
-width:220px;
-background:var(--window);
-border:2px solid;
-border-top-color:#fff;
-border-left-color:#fff;
-border-right-color:#000;
-border-bottom-color:#000;
-display:none;
-flex-direction:column;
-font-size:12px;
+    position:fixed;
+    z-index:10000;
+
+    left:2px;
+    bottom:30px;
+
+    width:235px;
+
+    display:none;
+    background:var(--window);
+
+    border-top:2px solid var(--light);
+    border-left:2px solid var(--light);
+    border-right:2px solid #000;
+    border-bottom:2px solid #000;
+
+    box-shadow:2px 2px 0 #000;
+}
+
+.start-side{
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:28px;
+
+    background:#808080;
+
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+
+    color:#c0c0c0;
+    font-weight:bold;
+    font-size:18px;
+
+    padding:5px 4px;
+}
+
+.start-side strong{
+    color:white;
+}
+
+.start-items{
+    margin-left:28px;
+    padding:3px;
 }
 
 .start-item{
-padding:6px;
-}
-.start-item:hover{
-background:#000080;
-color:white;
+    height:31px;
+
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    padding:3px 7px;
+
+    position:relative;
 }
 
-/* WINDOW */
+.start-item:hover{
+    background:#000080;
+    color:#fff;
+}
+
+.start-item .menu-icon{
+    width:22px;
+    text-align:center;
+    font-size:18px;
+}
+
+.start-item.arrow::after{
+    content:"▶";
+    position:absolute;
+    right:7px;
+    font-size:9px;
+}
+
+.start-separator{
+    height:1px;
+    margin:3px 4px;
+    border-top:1px solid #808080;
+    border-bottom:1px solid white;
+}
+
+/* =========================
+   WINDOWS
+========================= */
+
 .window{
-position:absolute;
-width:420px;
-height:300px;
-background:var(--window);
-border:2px solid;
-border-top-color:#fff;
-border-left-color:#fff;
-border-right-color:#000;
-border-bottom-color:#000;
-display:none;
-flex-direction:column;
-resize:both;
-overflow:hidden;
+    position:absolute;
+
+    width:450px;
+    height:320px;
+
+    min-width:220px;
+    min-height:130px;
+
+    display:none;
+    flex-direction:column;
+
+    background:var(--window);
+
+    border-top:2px solid var(--light);
+    border-left:2px solid var(--light);
+    border-right:2px solid #000;
+    border-bottom:2px solid #000;
+
+    box-shadow:1px 1px 0 #000;
+
+    resize:both;
+    overflow:hidden;
+}
+
+.window.maximized{
+    left:0 !important;
+    top:0 !important;
+    width:100% !important;
+    height:calc(100% - 30px) !important;
+    resize:none;
 }
 
 .titlebar{
-background:linear-gradient(to right,var(--title1),var(--title2));
-color:white;
-padding:2px 4px;
-display:flex;
-align-items:center;
-cursor:move;
-font-size:12px;
+    height:20px;
+    min-height:20px;
+
+    display:flex;
+    align-items:center;
+
+    padding:2px 3px;
+
+    background:var(--title);
+
+    color:white;
+
+    font-size:11px;
+    font-weight:bold;
+
+    cursor:default;
 }
 
-.title{flex:1;}
-
-.content{
-flex:1;
-background:white;
-overflow:auto;
-padding:4px;
-font-size:12px;
+.window.inactive .titlebar{
+    background:var(--titleInactive);
 }
 
-/* SCREENSAVER */
+.window-icon{
+    width:16px;
+    text-align:center;
+    margin-right:3px;
+}
+
+.title{
+    flex:1;
+    overflow:hidden;
+    white-space:nowrap;
+}
+
+.window-controls{
+    display:flex;
+    gap:2px;
+}
+
+.window-control{
+    width:16px;
+    height:14px;
+
+    padding:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-family:Arial,sans-serif;
+    font-weight:bold;
+    font-size:10px;
+    line-height:10px;
+
+    background:var(--window);
+
+    border-top:1px solid white;
+    border-left:1px solid white;
+    border-right:1px solid #000;
+    border-bottom:1px solid #000;
+}
+
+.window-control:active{
+    border-top-color:#000;
+    border-left-color:#000;
+    border-right-color:white;
+    border-bottom-color:white;
+}
+
+.window-content{
+    flex:1;
+    min-height:0;
+
+    background:white;
+
+    overflow:auto;
+
+    border-top:1px solid #808080;
+    border-left:1px solid #808080;
+    border-right:1px solid white;
+    border-bottom:1px solid white;
+}
+
+/* =========================
+   MENUBAR
+========================= */
+
+.menu-bar{
+    height:23px;
+    background:#c0c0c0;
+
+    display:flex;
+    align-items:center;
+
+    padding:2px 4px;
+
+    border-bottom:1px solid #808080;
+}
+
+.menu-bar span{
+    padding:2px 7px;
+}
+
+.menu-bar span:hover{
+    background:#000080;
+    color:white;
+}
+
+/* =========================
+   EXPLORER
+========================= */
+
+.explorer{
+    padding:8px;
+    font-size:12px;
+}
+
+.explorer-toolbar{
+    height:30px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    padding:3px;
+    background:#c0c0c0;
+    border-bottom:1px solid #808080;
+}
+
+.address{
+    flex:1;
+    height:21px;
+    border:2px inset #c0c0c0;
+    background:white;
+    padding:2px 4px;
+}
+
+.file-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,80px);
+    gap:15px;
+    padding:12px;
+}
+
+.file{
+    text-align:center;
+    padding:5px;
+}
+
+.file:hover{
+    background:#000080;
+    color:white;
+}
+
+.file-icon{
+    font-size:30px;
+    margin-bottom:3px;
+}
+
+/* =========================
+   NOTEPAD
+========================= */
+
+.notepad-area{
+    width:100%;
+    height:100%;
+    border:0;
+    outline:0;
+    resize:none;
+    padding:5px;
+
+    font-family:"Courier New",monospace;
+    font-size:13px;
+
+    user-select:text;
+}
+
+/* =========================
+   CALCULATOR
+========================= */
+
+.calculator{
+    padding:8px;
+    background:#c0c0c0;
+}
+
+.calc-display{
+    width:100%;
+    height:32px;
+
+    text-align:right;
+
+    padding:5px;
+
+    background:white;
+
+    border:2px inset #c0c0c0;
+
+    font-family:"Courier New",monospace;
+    font-size:16px;
+
+    margin-bottom:8px;
+}
+
+.calc-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:4px;
+}
+
+.calc-grid button{
+    height:36px;
+}
+
+/* =========================
+   CONTROL PANEL
+========================= */
+
+.control-panel{
+    padding:10px;
+    background:white;
+}
+
+.control-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+.cp-item{
+    text-align:center;
+    padding:10px;
+}
+
+.cp-item:hover{
+    background:#e0e0e0;
+}
+
+.cp-icon{
+    font-size:32px;
+}
+
+/* =========================
+   IE
+========================= */
+
+.browser{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+}
+
+.browser-toolbar{
+    background:#c0c0c0;
+    padding:4px;
+}
+
+.browser-row{
+    display:flex;
+    gap:3px;
+    margin-bottom:4px;
+}
+
+.browser-address{
+    flex:1;
+    height:22px;
+    border:2px inset #c0c0c0;
+    padding:2px 4px;
+    font-family:Arial,sans-serif;
+    font-size:11px;
+    user-select:text;
+}
+
+.browser-page{
+    flex:1;
+    overflow:auto;
+    background:white;
+    padding:15px;
+
+    font-family:Arial,sans-serif;
+}
+
+.web-header{
+    background:#000080;
+    color:white;
+    padding:10px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.web-box{
+    margin-top:15px;
+    border:1px solid #aaa;
+    padding:10px;
+}
+
+/* =========================
+   CALENDAR
+========================= */
+
+.calendar{
+    padding:8px;
+    background:white;
+}
+
+.calendar-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    background:#000080;
+    color:white;
+    padding:5px;
+}
+
+.calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    margin-top:5px;
+}
+
+.calendar-grid div{
+    min-height:30px;
+    border:1px solid #ddd;
+    padding:4px;
+}
+
+.calendar-grid .day{
+    background:#c0c0c0;
+    font-weight:bold;
+    text-align:center;
+    min-height:20px;
+}
+
+/* =========================
+   MINESWEEPER
+========================= */
+
+.mines{
+    padding:8px;
+    background:#c0c0c0;
+}
+
+.mine-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:7px;
+}
+
+.mine-counter{
+    background:#000;
+    color:#f00;
+    font-family:"Courier New",monospace;
+    font-size:20px;
+    padding:2px 5px;
+}
+
+.mine-board{
+    display:grid;
+    grid-template-columns:repeat(9,24px);
+    width:max-content;
+
+    border:3px outset #c0c0c0;
+}
+
+.mine-cell{
+    width:24px;
+    height:24px;
+
+    background:#c0c0c0;
+
+    border-top:2px solid white;
+    border-left:2px solid white;
+    border-right:2px solid #808080;
+    border-bottom:2px solid #808080;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-weight:bold;
+}
+
+.mine-cell.revealed{
+    border:1px solid #808080;
+    background:#c0c0c0;
+}
+
+/* =========================
+   SHUTDOWN / BOOT
+========================= */
+
+#systemScreen{
+    position:fixed;
+    inset:0;
+
+    z-index:50000;
+
+    display:none;
+
+    background:#000080;
+    color:white;
+
+    align-items:center;
+    justify-content:center;
+
+    font-family:"Courier New",monospace;
+    font-size:18px;
+
+    flex-direction:column;
+}
+
+.system-box{
+    width:70%;
+    max-width:600px;
+    text-align:center;
+}
+
+.system-logo{
+    font-size:42px;
+    font-weight:bold;
+    margin-bottom:35px;
+}
+
+.system-text{
+    min-height:30px;
+}
+
+.progress{
+    margin-top:20px;
+    height:18px;
+
+    border:2px solid white;
+
+    width:100%;
+}
+
+.progress-inner{
+    height:100%;
+    width:0;
+    background:white;
+}
+
+/* =========================
+   SCREENSAVER
+========================= */
+
 #screensaver{
-position:fixed;
-inset:0;
-background:black;
-display:none;
-align-items:center;
-justify-content:center;
-color:white;
-font-size:32px;
-z-index:9999;
+    position:fixed;
+    inset:0;
+
+    background:#000;
+
+    display:none;
+
+    z-index:40000;
+
+    overflow:hidden;
+}
+
+#screensaverText{
+    position:absolute;
+
+    color:white;
+
+    font-family:Arial,sans-serif;
+    font-size:22px;
+
+    left:50%;
+    top:50%;
+
+    transform:translate(-50%,-50%);
+}
+
+/* =========================
+   CONTEXT MENU
+========================= */
+
+#contextMenu{
+    position:fixed;
+    z-index:30000;
+
+    width:190px;
+
+    display:none;
+
+    background:#c0c0c0;
+
+    border-top:2px solid white;
+    border-left:2px solid white;
+    border-right:2px solid black;
+    border-bottom:2px solid black;
+
+    padding:2px;
+}
+
+.context-item{
+    padding:5px 8px;
+}
+
+.context-item:hover{
+    background:#000080;
+    color:white;
+}
+
+.context-separator{
+    border-top:1px solid #808080;
+    border-bottom:1px solid white;
+    margin:3px;
+}
+
+/* =========================
+   CRT
+========================= */
+
+body.crt::after{
+    content:"";
+
+    position:fixed;
+    inset:0;
+
+    pointer-events:none;
+
+    z-index:60000;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(0,0,0,.08) 0px,
+            rgba(0,0,0,.08) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+
+    mix-blend-mode:multiply;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+#loginScreen{
+    position:fixed;
+    inset:0;
+
+    z-index:45000;
+
+    background:#000;
+
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-family:"MS Sans Serif",Tahoma,Arial,sans-serif;
+}
+
+.login-box{
+    width:360px;
+
+    border:2px solid white;
+
+    padding:20px;
+
+    background:#000;
+}
+
+.login-title{
+    font-size:20px;
+    margin-bottom:20px;
+}
+
+.login-input{
+    width:100%;
+    height:25px;
+
+    background:#000;
+    color:white;
+
+    border:1px solid white;
+
+    padding:3px;
+
+    user-select:text;
+}
+
+.login-button{
+    margin-top:12px;
+    padding:4px 20px;
+
+    background:#000;
+    color:white;
+
+    border:1px solid white;
+}
+
+.login-error{
+    color:#ff5555;
+    margin-top:10px;
+    min-height:15px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:600px){
+    body{
+        font-size:11px;
+    }
+
+    .window{
+        width:calc(100vw - 12px);
+        height:calc(100vh - 45px);
+        left:6px !important;
+        top:5px !important;
+    }
+
+    #taskbarTabs{
+        display:none;
+    }
+
+    #tray{
+        min-width:75px;
+    }
+
+    #startButton{
+        min-width:65px;
+    }
 }
 </style>
 </head>
+
 <body>
 
-<div class="desktop" id="desktop"></div>
+<div id="desktop"></div>
 
-<div id="screensaver">Windows 98</div>
+<!-- START MENU -->
+<div id="startMenu">
 
-<div class="taskbar">
-<div class="btn" id="startBtn">Start</div>
-<div id="taskbarTabs"></div>
-<div class="clock" id="clock"></div>
+    <div class="start-side">
+        <strong>Windows</strong> 98
+    </div>
+
+    <div class="start-items">
+
+        <div class="start-item" ondblclick="openExplorer()"
+             onclick="openExplorer()">
+            <span class="menu-icon">💻</span>
+            <span>My Computer</span>
+        </div>
+
+        <div class="start-item" onclick="openIE()">
+            <span class="menu-icon">🌐</span>
+            <span>Internet Explorer</span>
+        </div>
+
+        <div class="start-item" onclick="openNotepad()">
+            <span class="menu-icon">📝</span>
+            <span>Notepad</span>
+        </div>
+
+        <div class="start-item" onclick="openCalculator()">
+            <span class="menu-icon">🔢</span>
+            <span>Calculator</span>
+        </div>
+
+        <div class="start-item" onclick="openCalendar()">
+            <span class="menu-icon">📅</span>
+            <span>Calendar</span>
+        </div>
+
+        <div class="start-separator"></div>
+
+        <div class="start-item" onclick="openControlPanel()">
+            <span class="menu-icon">⚙️</span>
+            <span>Control Panel</span>
+        </div>
+
+        <div class="start-item" onclick="openMines()">
+            <span class="menu-icon">💣</span>
+            <span>Games</span>
+        </div>
+
+        <div class="start-separator"></div>
+
+        <div class="start-item" onclick="activateScreensaver()">
+            <span class="menu-icon">🖥️</span>
+            <span>Screensaver</span>
+        </div>
+
+        <div class="start-item" onclick="rebootSystem()">
+            <span class="menu-icon">🔄</span>
+            <span>Restart...</span>
+        </div>
+
+        <div class="start-item" onclick="shutdownSystem()">
+            <span class="menu-icon">⏻</span>
+            <span>Shut Down...</span>
+        </div>
+
+    </div>
 </div>
 
-<div id="startMenu">
-<div class="start-item" onclick="openExplorer()">My Computer</div>
-<div class="start-item" onclick="openIE()">Internet Explorer</div>
-<div class="start-item" onclick="openControlPanel()">Control Panel</div>
-<div class="start-item" onclick="openMines()">Minesweeper</div>
-<div class="start-item" onclick="activateScreensaver()">Screensaver</div>
-<div class="start-item" onclick="shutdown()">Shut Down...</div>
+<!-- CONTEXT MENU -->
+<div id="contextMenu">
+    <div class="context-item" onclick="refreshDesktop()">Refresh</div>
+    <div class="context-separator"></div>
+    <div class="context-item" onclick="createTextFile()">New → Text Document</div>
+    <div class="context-item" onclick="openControlPanel()">Properties</div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop"></div>
+
+<!-- TASKBAR -->
+<div id="taskbar">
+
+    <button class="win-button" id="startButton">
+        <div class="start-logo">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        Start
+    </button>
+
+    <div id="taskbarTabs"></div>
+
+    <div id="tray">
+        <span class="tray-icon">🔊</span>
+        <span id="clock"></span>
+    </div>
+
+</div>
+
+<!-- SCREENSAVER -->
+<div id="screensaver">
+    <div id="screensaverText">Windows 98</div>
+</div>
+
+<!-- SYSTEM SCREEN -->
+<div id="systemScreen">
+
+    <div class="system-box">
+
+        <div class="system-logo">
+            Windows 98
+        </div>
+
+        <div class="system-text" id="systemText">
+            Preparing system...
+        </div>
+
+        <div class="progress">
+            <div class="progress-inner" id="progressInner"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+
+    <div class="login-box">
+
+        <div class="login-title">
+            Windows 98
+        </div>
+
+        <div>
+            Enter your user name:
+        </div>
+
+        <input
+            class="login-input"
+            id="loginName"
+            autocomplete="off"
+        >
+
+        <div style="margin-top:12px">
+            Password:
+        </div>
+
+        <input
+            class="login-input"
+            id="loginPassword"
+            type="password"
+        >
+
+        <button
+            class="login-button"
+            onclick="login()"
+        >
+            OK
+        </button>
+
+        <div
+            class="login-error"
+            id="loginError"
+        ></div>
+
+    </div>
+
 </div>
 
 <script>
+/* ============================================================
+   WINDOWS 98 WEB OS
+============================================================ */
 
-/* CLOCK */
-setInterval(()=>{
-clock.textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-},1000);
+const desktop = document.getElementById("desktop");
+const taskbarTabs = document.getElementById("taskbarTabs");
+const startMenu = document.getElementById("startMenu");
+const startButton = document.getElementById("startButton");
+const clock = document.getElementById("clock");
+const contextMenu = document.getElementById("contextMenu");
+const screensaver = document.getElementById("screensaver");
+const systemScreen = document.getElementById("systemScreen");
+const systemText = document.getElementById("systemText");
+const progressInner = document.getElementById("progressInner");
 
-/* START */
-startBtn.onclick=()=>startMenu.style.display=
-startMenu.style.display==="flex"?"none":"flex";
+let zIndex = 100;
+let windows = [];
+let iconCounter = 0;
 
-/* WINDOW ENGINE */
-let z=1;
-function createWindow(title,contentHTML){
-let win=document.createElement("div");
-win.className="window";
-win.style.top="100px";
-win.style.left="150px";
-win.innerHTML=`
-<div class="titlebar"><div class="title">${title}</div></div>
-<div class="content">${contentHTML}</div>`;
-document.body.appendChild(win);
-win.style.display="flex";
-win.style.zIndex=++z;
-
-let bar=win.querySelector(".titlebar");
-let offsetX,offsetY,isDrag=false;
-
-bar.onmousedown=e=>{
-isDrag=true;
-offsetX=e.offsetX;
-offsetY=e.offsetY;
-win.style.zIndex=++z;
+let settings = JSON.parse(
+    localStorage.getItem("win98_settings") || "null"
+) || {
+    seconds:false,
+    crt:false,
+    wallpaper:"#008080"
 };
-document.onmousemove=e=>{
-if(!isDrag)return;
-win.style.left=e.pageX-offsetX+"px";
-win.style.top=e.pageY-offsetY+"px";
-};
-document.onmouseup=()=>isDrag=false;
 
-let tab=document.createElement("div");
-tab.className="btn";
-tab.textContent=title;
-tab.onclick=()=>{
-win.style.display=
-win.style.display==="none"?"flex":"none";
-};
-taskbarTabs.appendChild(tab);
+/* ============================================================
+   SOUND
+============================================================ */
 
-return win;
+let audioContext = null;
+
+function beep(frequency=600,duration=.04){
+
+    try{
+
+        if(!audioContext){
+            audioContext =
+                new (window.AudioContext ||
+                     window.webkitAudioContext)();
+        }
+
+        const osc =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+        osc.frequency.value=frequency;
+
+        gain.gain.value=.025;
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        osc.start();
+
+        osc.stop(
+            audioContext.currentTime + duration
+        );
+
+    }catch(e){}
 }
 
-/* FILE SYSTEM */
+/* ============================================================
+   SETTINGS
+============================================================ */
+
+function saveSettings(){
+
+    localStorage.setItem(
+        "win98_settings",
+        JSON.stringify(settings)
+    );
+
+}
+
+function applySettings(){
+
+    document.body.classList.toggle(
+        "crt",
+        settings.crt
+    );
+
+    document.documentElement
+        .style.setProperty(
+            "--desktop",
+            settings.wallpaper
+        );
+
+    updateClock();
+
+}
+
+applySettings();
+
+/* ============================================================
+   CLOCK
+============================================================ */
+
+function updateClock(){
+
+    const now = new Date();
+
+    let options = {
+        hour:"2-digit",
+        minute:"2-digit"
+    };
+
+    if(settings.seconds){
+        options.second="2-digit";
+    }
+
+    clock.textContent =
+        now.toLocaleTimeString([],options);
+
+}
+
+setInterval(updateClock,1000);
+updateClock();
+
+/* ============================================================
+   START MENU
+============================================================ */
+
+startButton.addEventListener("click",e=>{
+
+    e.stopPropagation();
+
+    startMenu.style.display =
+        startMenu.style.display==="block"
+        ? "none"
+        : "block";
+
+    beep(500,.035);
+
+});
+
+document.addEventListener("click",e=>{
+
+    if(
+        !startMenu.contains(e.target) &&
+        e.target!==startButton
+    ){
+        startMenu.style.display="none";
+    }
+
+    if(!contextMenu.contains(e.target)){
+        contextMenu.style.display="none";
+    }
+
+});
+
+/* ============================================================
+   DESKTOP ICONS
+============================================================ */
+
+const desktopApps = [
+
+    {
+        name:"My Computer",
+        icon:"💻",
+        action:openExplorer
+    },
+
+    {
+        name:"Recycle Bin",
+        icon:"🗑️",
+        action:openRecycleBin
+    },
+
+    {
+        name:"Internet Explorer",
+        icon:"🌐",
+        action:openIE
+    },
+
+    {
+        name:"Notepad",
+        icon:"📝",
+        action:openNotepad
+    },
+
+    {
+        name:"Calculator",
+        icon:"🔢",
+        action:openCalculator
+    },
+
+    {
+        name:"Calendar",
+        icon:"📅",
+        action:openCalendar
+    },
+
+    {
+        name:"Minesweeper",
+        icon:"💣",
+        action:openMines
+    },
+
+    {
+        name:"Control Panel",
+        icon:"⚙️",
+        action:openControlPanel
+    }
+
+];
+
+function createDesktopIcons(){
+
+    desktop.innerHTML="";
+
+    desktopApps.forEach((app,index)=>{
+
+        const icon =
+            document.createElement("div");
+
+        icon.className="desktop-icon";
+
+        const col =
+            Math.floor(index/5);
+
+        const row =
+            index%5;
+
+        icon.style.left =
+            (10 + col*88)+"px";
+
+        icon.style.top =
+            (10 + row*88)+"px";
+
+        icon.innerHTML=`
+            <div class="icon-image">
+                ${app.icon}
+            </div>
+            <div class="icon-label">
+                ${app.name}
+            </div>
+        `;
+
+        icon.addEventListener("click",e=>{
+
+            document.querySelectorAll(
+                ".desktop-icon"
+            ).forEach(i=>
+                i.classList.remove("selected")
+            );
+
+            icon.classList.add("selected");
+
+            e.stopPropagation();
+
+        });
+
+        icon.addEventListener("dblclick",e=>{
+
+            beep(700,.04);
+
+            app.action();
+
+            e.stopPropagation();
+
+        });
+
+        /* Dragging */
+
+        let dragging=false;
+        let dx=0;
+        let dy=0;
+
+        icon.addEventListener("mousedown",e=>{
+
+            if(e.button!==0)return;
+
+            dragging=true;
+
+            dx=e.clientX-icon.offsetLeft;
+            dy=e.clientY-icon.offsetTop;
+
+            function move(ev){
+
+                if(!dragging)return;
+
+                let x=ev.clientX-dx;
+                let y=ev.clientY-dy;
+
+                x=Math.max(
+                    0,
+                    Math.min(
+                        desktop.clientWidth-icon.offsetWidth,
+                        x
+                    )
+                );
+
+                y=Math.max(
+                    0,
+                    Math.min(
+                        desktop.clientHeight-icon.offsetHeight,
+                        y
+                    )
+                );
+
+                icon.style.left=x+"px";
+                icon.style.top=y+"px";
+
+            }
+
+            function up(){
+
+                dragging=false;
+
+                document.removeEventListener(
+                    "mousemove",
+                    move
+                );
+
+                document.removeEventListener(
+                    "mouseup",
+                    up
+                );
+
+                /* snap to grid */
+
+                let x =
+                    Math.round(
+                        parseInt(icon.style.left)/88
+                    )*88;
+
+                let y =
+                    Math.round(
+                        parseInt(icon.style.top)/88
+                    )*88;
+
+                icon.style.left =
+                    Math.max(0,x)+"px";
+
+                icon.style.top =
+                    Math.max(0,y)+"px";
+
+            }
+
+            document.addEventListener(
+                "mousemove",
+                move
+            );
+
+            document.addEventListener(
+                "mouseup",
+                up
+            );
+
+        });
+
+        desktop.appendChild(icon);
+
+    });
+
+}
+
+createDesktopIcons();
+
+/* ============================================================
+   WINDOW ENGINE
+============================================================ */
+
+function createWindow(
+    title,
+    contentHTML,
+    icon="🪟",
+    width=450,
+    height=320
+){
+
+    const win =
+        document.createElement("div");
+
+    win.className="window";
+
+    win.style.width=width+"px";
+    win.style.height=height+"px";
+
+    const offset =
+        (windows.length%8)*25;
+
+    win.style.left =
+        Math.max(
+            10,
+            Math.min(
+                window.innerWidth-width-10,
+                80+offset
+            )
+        )+"px";
+
+    win.style.top =
+        Math.max(
+            10,
+            Math.min(
+                window.innerHeight-height-45,
+                50+offset
+            )
+        )+"px";
+
+    win.innerHTML=`
+
+        <div class="titlebar">
+
+            <div class="window-icon">
+                ${icon}
+            </div>
+
+            <div class="title">
+                ${title}
+            </div>
+
+            <div class="window-controls">
+
+                <button
+                    class="window-control minimize"
+                    title="Minimize"
+                >_</button>
+
+                <button
+                    class="window-control maximize"
+                    title="Maximize"
+                >□</button>
+
+                <button
+                    class="window-control close"
+                    title="Close"
+                >×</button>
+
+            </div>
+
+        </div>
+
+        <div class="window-content">
+            ${contentHTML}
+        </div>
+    `;
+
+    document.body.appendChild(win);
+
+    const state={
+        win,
+        title,
+        minimized:false,
+        maximized:false,
+        previous:{
+            left:win.style.left,
+            top:win.style.top,
+            width:win.style.width,
+            height:win.style.height
+        }
+    };
+
+    windows.push(state);
+
+    const tab =
+        document.createElement("button");
+
+    tab.className="win-button task-button";
+    tab.textContent=title;
+
+    taskbarTabs.appendChild(tab);
+
+    win.style.display="flex";
+
+    focusWindow(state);
+
+    /* Taskbar */
+
+    tab.addEventListener("click",()=>{
+
+        if(state.minimized){
+
+            state.minimized=false;
+            win.style.display="flex";
+
+            focusWindow(state);
+
+        }else{
+
+            if(
+                parseInt(win.style.zIndex)===zIndex
+            ){
+
+                minimizeWindow(state);
+
+            }else{
+
+                focusWindow(state);
+
+            }
+
+        }
+
+    });
+
+    /* Controls */
+
+    win.querySelector(".close")
+        .addEventListener("click",e=>{
+
+            e.stopPropagation();
+
+            closeWindow(state);
+
+        });
+
+    win.querySelector(".minimize")
+        .addEventListener("click",e=>{
+
+            e.stopPropagation();
+
+            minimizeWindow(state);
+
+        });
+
+    win.querySelector(".maximize")
+        .addEventListener("click",e=>{
+
+            e.stopPropagation();
+
+            maximizeWindow(state);
+
+        });
+
+    /* Focus */
+
+    win.addEventListener("mousedown",()=>{
+
+        focusWindow(state);
+
+    });
+
+    /* Drag */
+
+    const titlebar =
+        win.querySelector(".titlebar");
+
+    let dragging=false;
+    let ox=0;
+    let oy=0;
+
+    titlebar.addEventListener(
+        "mousedown",
+        e=>{
+
+            if(
+                e.target.closest(
+                    ".window-control"
+                )
+            )return;
+
+            if(state.maximized)return;
+
+            dragging=true;
+
+            ox=e.clientX-win.offsetLeft;
+            oy=e.clientY-win.offsetTop;
+
+            focusWindow(state);
+
+            function move(ev){
+
+                if(!dragging)return;
+
+                let x=
+                    ev.clientX-ox;
+
+                let y=
+                    ev.clientY-oy;
+
+                x=Math.max(0,x);
+                y=Math.max(0,y);
+
+                x=Math.min(
+                    window.innerWidth-win.offsetWidth,
+                    x
+                );
+
+                y=Math.min(
+                    window.innerHeight-32,
+                    y
+                );
+
+                win.style.left=x+"px";
+                win.style.top=y+"px";
+
+            }
+
+            function up(){
+
+                dragging=false;
+
+                document.removeEventListener(
+                    "mousemove",
+                    move
+                );
+
+                document.removeEventListener(
+                    "mouseup",
+                    up
+                );
+
+            }
+
+            document.addEventListener(
+                "mousemove",
+                move
+            );
+
+            document.addEventListener(
+                "mouseup",
+                up
+            );
+
+        }
+    );
+
+    return {
+        win,
+        state
+    };
+
+}
+
+function focusWindow(state){
+
+    if(!state || !state.win)return;
+
+    zIndex++;
+
+    state.win.style.zIndex=zIndex;
+
+    state.win.classList.remove("inactive");
+
+    windows.forEach(other=>{
+
+        if(other!==state){
+            other.win.classList.add("inactive");
+        }
+
+    });
+
+    document.querySelectorAll(
+        ".task-button"
+    ).forEach(tab=>{
+        tab.classList.remove("active");
+    });
+
+    const index=windows.indexOf(state);
+
+    if(index>=0){
+        taskbarTabs.children[index]
+            ?.classList.add("active");
+    }
+
+}
+
+function minimizeWindow(state){
+
+    state.minimized=true;
+
+    state.win.style.display="none";
+
+    const index=windows.indexOf(state);
+
+    taskbarTabs.children[index]
+        ?.classList.remove("active");
+
+}
+
+function maximizeWindow(state){
+
+    if(!state.maximized){
+
+        state.previous={
+            left:state.win.style.left,
+            top:state.win.style.top,
+            width:state.win.style.width,
+            height:state.win.style.height
+        };
+
+        state.maximized=true;
+
+        state.win.classList.add("maximized");
+
+    }else{
+
+        state.maximized=false;
+
+        state.win.classList.remove("maximized");
+
+        state.win.style.left=
+            state.previous.left;
+
+        state.win.style.top=
+            state.previous.top;
+
+        state.win.style.width=
+            state.previous.width;
+
+        state.win.style.height=
+            state.previous.height;
+
+    }
+
+    focusWindow(state);
+
+}
+
+function closeWindow(state){
+
+    const index=windows.indexOf(state);
+
+    state.win.remove();
+
+    taskbarTabs.children[index]?.remove();
+
+    windows.splice(index,1);
+
+}
+
+/* ============================================================
+   MY COMPUTER
+============================================================ */
+
 function openExplorer(){
-createWindow("My Computer",`
-<b>Local Disk (C:)</b><br><br>
-📁 Program Files<br>
-📁 My Documents<br>
-📄 readme.txt
-`);
+
+    const {state}=createWindow(
+        "My Computer",
+        `
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Help</span>
+        </div>
+
+        <div class="explorer-toolbar">
+            <button class="win-button">←</button>
+            <button class="win-button">→</button>
+            <button class="win-button">↑</button>
+
+            <div class="address">
+                My Computer
+            </div>
+        </div>
+
+        <div class="explorer">
+
+            <div style="font-weight:bold">
+                Drives
+            </div>
+
+            <div class="file-grid">
+
+                <div class="file">
+                    <div class="file-icon">💾</div>
+                    3½ Floppy (A:)
+                </div>
+
+                <div class="file">
+                    <div class="file-icon">💽</div>
+                    Local Disk (C:)
+                </div>
+
+                <div class="file">
+                    <div class="file-icon">💿</div>
+                    CD Drive (D:)
+                </div>
+
+                <div class="file">
+                    <div class="file-icon">🌐</div>
+                    Network
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div style="font-weight:bold">
+                Folders
+            </div>
+
+            <div class="file-grid">
+
+                <div class="file">
+                    <div class="file-icon">📁</div>
+                    Program Files
+                </div>
+
+                <div class="file">
+                    <div class="file-icon">📁</div>
+                    Windows
+                </div>
+
+                <div class="file">
+                    <div class="file-icon">📁</div>
+                    My Documents
+                </div>
+
+                <div class="file">
+                    <div class="file-icon">📁</div>
+                    Desktop
+                </div>
+
+            </div>
+
+        </div>
+        `,
+        "💻",
+        520,
+        370
+    );
+
 }
 
-/* INTERNET EXPLORER */
+/* ============================================================
+   RECYCLE BIN
+============================================================ */
+
+function openRecycleBin(){
+
+    createWindow(
+        "Recycle Bin",
+        `
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Help</span>
+        </div>
+
+        <div style="
+            padding:30px;
+            text-align:center;
+        ">
+
+            <div style="font-size:60px">
+                🗑️
+            </div>
+
+            <h3>
+                Recycle Bin is empty.
+            </h3>
+
+            <p>
+                Deleted files will appear here.
+            </p>
+
+        </div>
+        `,
+        "🗑️",
+        420,
+        280
+    );
+
+}
+
+/* ============================================================
+   NOTEPAD
+============================================================ */
+
+function openNotepad(){
+
+    createWindow(
+        "Untitled - Notepad",
+        `
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>Search</span>
+            <span>Help</span>
+        </div>
+
+        <textarea
+            class="notepad-area"
+            spellcheck="false"
+            placeholder=""
+        ></textarea>
+        `,
+        "📝",
+        520,
+        350
+    );
+
+}
+
+/* ============================================================
+   CALCULATOR
+============================================================ */
+
+function openCalculator(){
+
+    const {win}=createWindow(
+        "Calculator",
+        `
+        <div class="calculator">
+
+            <input
+                class="calc-display"
+                value="0"
+                readonly
+            >
+
+            <div class="calc-grid">
+
+                <button class="win-button">7</button>
+                <button class="win-button">8</button>
+                <button class="win-button">9</button>
+                <button class="win-button">/</button>
+
+                <button class="win-button">4</button>
+                <button class="win-button">5</button>
+                <button class="win-button">6</button>
+                <button class="win-button">*</button>
+
+                <button class="win-button">1</button>
+                <button class="win-button">2</button>
+                <button class="win-button">3</button>
+                <button class="win-button">-</button>
+
+                <button class="win-button">0</button>
+                <button class="win-button">.</button>
+                <button class="win-button">=</button>
+                <button class="win-button">+</button>
+
+                <button
+                    class="win-button"
+                    style="grid-column:span 4"
+                >C</button>
+
+            </div>
+
+        </div>
+        `,
+        "🔢",
+        280,
+        310
+    );
+
+    const display =
+        win.querySelector(".calc-display");
+
+    let expression="";
+
+    win.querySelectorAll(
+        ".calc-grid button"
+    ).forEach(button=>{
+
+        button.onclick=()=>{
+
+            const value=button.textContent;
+
+            if(value==="C"){
+
+                expression="";
+                display.value="0";
+
+            }else if(value==="="){
+
+                try{
+
+                    if(!/^[0-9+\-*/. ()]+$/.test(expression)){
+                        throw new Error();
+                    }
+
+                    expression =
+                        String(
+                            Function(
+                                "return "+expression
+                            )()
+                        );
+
+                    display.value=expression;
+
+                }catch{
+
+                    display.value="Error";
+                    expression="";
+
+                }
+
+            }else{
+
+                expression+=value;
+                display.value=expression;
+
+            }
+
+        };
+
+    });
+
+}
+
+/* ============================================================
+   CALENDAR
+============================================================ */
+
+function openCalendar(){
+
+    const now=new Date();
+
+    const month=now.getMonth();
+    const year=now.getFullYear();
+
+    const monthName =
+        now.toLocaleString(
+            "default",
+            {month:"long"}
+        );
+
+    const first =
+        new Date(year,month,1).getDay();
+
+    const days =
+        new Date(year,month+1,0).getDate();
+
+    let html=`
+
+        <div class="calendar">
+
+            <div class="calendar-header">
+
+                <button class="win-button">◀</button>
+
+                <strong>
+                    ${monthName} ${year}
+                </strong>
+
+                <button class="win-button">▶</button>
+
+            </div>
+
+            <div class="calendar-grid">
+
+                <div class="day">Sun</div>
+                <div class="day">Mon</div>
+                <div class="day">Tue</div>
+                <div class="day">Wed</div>
+                <div class="day">Thu</div>
+                <div class="day">Fri</div>
+                <div class="day">Sat</div>
+    `;
+
+    for(let i=0;i<first;i++){
+        html+="<div></div>";
+    }
+
+    for(let d=1;d<=days;d++){
+
+        const today=
+            d===now.getDate();
+
+        html+=`
+            <div
+                style="${
+                    today
+                    ? "background:#000080;color:white;font-weight:bold;"
+                    : ""
+                }"
+            >
+                ${d}
+            </div>
+        `;
+
+    }
+
+    html+=`
+            </div>
+
+        </div>
+    `;
+
+    createWindow(
+        "Calendar",
+        html,
+        "📅",
+        390,
+        340
+    );
+
+}
+
+/* ============================================================
+   INTERNET EXPLORER
+============================================================ */
+
 function openIE(){
-createWindow("Internet Explorer 5",`
-<input style="width:100%" value="https://example.com"><br><br>
-<iframe src="https://example.com" style="width:100%;height:200px;"></iframe>
-`);
+
+    const {win}=createWindow(
+        "Microsoft Internet Explorer",
+        `
+        <div class="browser">
+
+            <div class="menu-bar">
+                <span>File</span>
+                <span>Edit</span>
+                <span>View</span>
+                <span>Go</span>
+                <span>Favorites</span>
+                <span>Help</span>
+            </div>
+
+            <div class="browser-toolbar">
+
+                <div class="browser-row">
+
+                    <button class="win-button">
+                        Back
+                    </button>
+
+                    <button class="win-button">
+                        Forward
+                    </button>
+
+                    <button class="win-button">
+                        Stop
+                    </button>
+
+                    <button
+                        class="win-button"
+                        id="ieGo"
+                    >
+                        Go
+                    </button>
+
+                </div>
+
+                <div class="browser-row">
+
+                    <input
+                        class="browser-address"
+                        id="ieAddress"
+                        value="http://www.example.com"
+                    >
+
+                </div>
+
+            </div>
+
+            <div
+                class="browser-page"
+                id="iePage"
+            >
+
+                <div class="web-header">
+                    Internet Explorer
+                </div>
+
+                <div class="web-box">
+
+                    <h2>
+                        Welcome to the Web
+                    </h2>
+
+                    <p>
+                        You are connected to the
+                        Windows 98 Web OS.
+                    </p>
+
+                    <p>
+                        Type an address above and
+                        press Go.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+        `,
+        "🌐",
+        650,
+        440
+    );
+
+    const address =
+        win.querySelector("#ieAddress");
+
+    const page =
+        win.querySelector("#iePage");
+
+    win.querySelector("#ieGo")
+        .onclick=()=>{
+
+            const url=address.value;
+
+            page.innerHTML=`
+
+                <div class="web-header">
+                    ${escapeHTML(url)}
+                </div>
+
+                <div class="web-box">
+
+                    <h2>
+                        Web Page
+                    </h2>
+
+                    <p>
+                        Internet Explorer 5
+                        has loaded:
+                    </p>
+
+                    <p>
+                        <b>
+                            ${escapeHTML(url)}
+                        </b>
+                    </p>
+
+                    <hr>
+
+                    <p>
+                        This simulated browser
+                        runs entirely inside the
+                        Windows 98 Web OS.
+                    </p>
+
+                </div>
+
+            `;
+
+        };
+
 }
 
-/* CONTROL PANEL */
+function escapeHTML(text){
+
+    return text
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+/* ============================================================
+   CONTROL PANEL
+============================================================ */
+
 function openControlPanel(){
-createWindow("Control Panel",`
-<button onclick="setTheme('win98')">Windows 98</button><br><br>
-<button onclick="setTheme('win95')">Windows 95</button><br><br>
-<button onclick="setTheme('contrast')">High Contrast</button>
-`);
+
+    const {win}=createWindow(
+        "Control Panel",
+        `
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Help</span>
+        </div>
+
+        <div class="control-panel">
+
+            <div class="control-grid">
+
+                <div
+                    class="cp-item"
+                    onclick="openDisplaySettings()"
+                >
+                    <div class="cp-icon">🖥️</div>
+                    <b>Display</b>
+                    <br>
+                    Change desktop appearance
+                </div>
+
+                <div
+                    class="cp-item"
+                    onclick="openDateSettings()"
+                >
+                    <div class="cp-icon">🕐</div>
+                    <b>Date/Time</b>
+                    <br>
+                    Change clock settings
+                </div>
+
+                <div
+                    class="cp-item"
+                    onclick="toggleCRT()"
+                >
+                    <div class="cp-icon">📺</div>
+                    <b>CRT Effect</b>
+                    <br>
+                    Toggle scanlines
+                </div>
+
+                <div class="cp-item">
+                    <div class="cp-icon">🖱️</div>
+                    <b>Mouse</b>
+                    <br>
+                    Mouse settings
+                </div>
+
+                <div class="cp-item">
+                    <div class="cp-icon">⌨️</div>
+                    <b>Keyboard</b>
+                    <br>
+                    Keyboard settings
+                </div>
+
+                <div class="cp-item">
+                    <div class="cp-icon">🔊</div>
+                    <b>Sounds</b>
+                    <br>
+                    System sounds
+                </div>
+
+            </div>
+
+        </div>
+        `,
+        "⚙️",
+        560,
+        390
+    );
+
 }
 
-function setTheme(theme){
-if(theme==="win95"){
-document.documentElement.style.setProperty('--bg','#008080');
-document.documentElement.style.setProperty('--title1','#000080');
-}
-if(theme==="contrast"){
-document.documentElement.style.setProperty('--bg','#000');
-document.documentElement.style.setProperty('--title1','#000');
-document.documentElement.style.setProperty('--title2','#fff');
-}
-if(theme==="win98"){
-document.documentElement.style.setProperty('--bg','#008080');
-document.documentElement.style.setProperty('--title1','#000080');
-document.documentElement.style.setProperty('--title2','#1084d0');
-}
+function openDisplaySettings(){
+
+    createWindow(
+        "Display Properties",
+        `
+        <div style="padding:12px">
+
+            <h3>Display Properties</h3>
+
+            <fieldset>
+                <legend>Desktop</legend>
+
+                <p>
+                    Choose a desktop color:
+                </p>
+
+                <button
+                    class="win-button"
+                    onclick="setWallpaper('#008080')"
+                >
+                    Teal
+                </button>
+
+                <button
+                    class="win-button"
+                    onclick="setWallpaper('#000080')"
+                >
+                    Navy
+                </button>
+
+                <button
+                    class="win-button"
+                    onclick="setWallpaper('#808080')"
+                >
+                    Gray
+                </button>
+
+                <button
+                    class="win-button"
+                    onclick="setWallpaper('#000000')"
+                >
+                    Black
+                </button>
+
+            </fieldset>
+
+        </div>
+        `,
+        "🖥️",
+        390,
+        260
+    );
+
 }
 
-/* MINES */
+function setWallpaper(color){
+
+    settings.wallpaper=color;
+
+    saveSettings();
+
+    applySettings();
+
+}
+
+function openDateSettings(){
+
+    createWindow(
+        "Date/Time Properties",
+        `
+        <div style="padding:15px">
+
+            <h3>Date and Time</h3>
+
+            <p>
+                Current system time:
+            </p>
+
+            <div
+                style="
+                    font-size:22px;
+                    margin:20px 0;
+                "
+                id="largeClock"
+            ></div>
+
+            <button
+                class="win-button"
+                onclick="settings.seconds=!settings.seconds;saveSettings();updateClock();"
+            >
+                Toggle Seconds
+            </button>
+
+        </div>
+        `,
+        "🕐",
+        350,
+        240
+    );
+
+    function updateLarge(){
+
+        const element =
+            document.getElementById(
+                "largeClock"
+            );
+
+        if(element){
+
+            element.textContent =
+                new Date().toLocaleString();
+
+            requestAnimationFrame(
+                updateLarge
+            );
+
+        }
+
+    }
+
+    updateLarge();
+
+}
+
+function toggleCRT(){
+
+    settings.crt=!settings.crt;
+
+    saveSettings();
+
+    applySettings();
+
+    beep(450,.06);
+
+}
+
+/* ============================================================
+   MINESWEEPER
+============================================================ */
+
 function openMines(){
-createWindow("Minesweeper","Minesweeper coming here...");
+
+    const size=9;
+
+    let mines=new Set();
+
+    while(mines.size<10){
+
+        mines.add(
+            Math.floor(
+                Math.random()*size*size
+            )
+        );
+
+    }
+
+    const {win}=createWindow(
+        "Minesweeper",
+        `
+        <div class="mines">
+
+            <div class="mine-top">
+
+                <div class="mine-counter">
+                    010
+                </div>
+
+                <button
+                    class="win-button"
+                    id="mineReset"
+                >
+                    🙂
+                </button>
+
+                <div class="mine-counter">
+                    000
+                </div>
+
+            </div>
+
+            <div
+                class="mine-board"
+                id="mineBoard"
+            ></div>
+
+        </div>
+        `,
+        "💣",
+        260,
+        330
+    );
+
+    const board=
+        win.querySelector("#mineBoard");
+
+    function build(){
+
+        board.innerHTML="";
+
+        for(let i=0;i<81;i++){
+
+            const cell=
+                document.createElement("button");
+
+            cell.className="mine-cell";
+            cell.textContent="";
+
+            cell.onclick=()=>{
+
+                if(mines.has(i)){
+
+                    cell.textContent="💣";
+                    cell.style.color="red";
+
+                    board.querySelectorAll(
+                        ".mine-cell"
+                    ).forEach((c,index)=>{
+
+                        if(mines.has(index)){
+                            c.textContent="💣";
+                        }
+
+                    });
+
+                    beep(180,.2);
+
+                }else{
+
+                    cell.classList.add(
+                        "revealed"
+                    );
+
+                    const x=i%size;
+                    const y=Math.floor(i/size);
+
+                    let count=0;
+
+                    for(let dy=-1;dy<=1;dy++){
+
+                        for(let dx=-1;dx<=1;dx++){
+
+                            if(
+                                dx===0 &&
+                                dy===0
+                            )continue;
+
+                            const n=
+                                (y+dy)*size+
+                                (x+dx);
+
+                            if(mines.has(n)){
+                                count++;
+                            }
+
+                        }
+
+                    }
+
+                    cell.textContent=
+                        count || "";
+
+                }
+
+            };
+
+            board.appendChild(cell);
+
+        }
+
+    }
+
+    win.querySelector("#mineReset")
+        .onclick=build;
+
+    build();
+
 }
 
-/* SCREENSAVER */
+/* ============================================================
+   SCREENSAVER
+============================================================ */
+
+let saverX=100;
+let saverY=100;
+let saverDX=2;
+let saverDY=2;
+
 function activateScreensaver(){
-screensaver.style.display="flex";
-document.onmousemove=()=>screensaver.style.display="none";
+
+    startMenu.style.display="none";
+
+    screensaver.style.display="block";
+
+    function animate(){
+
+        if(
+            screensaver.style.display==="none"
+        ){
+            return;
+        }
+
+        const text=
+            document.getElementById(
+                "screensaverText"
+            );
+
+        saverX+=saverDX;
+        saverY+=saverDY;
+
+        if(
+            saverX<0 ||
+            saverX+160>window.innerWidth
+        ){
+            saverDX*=-1;
+        }
+
+        if(
+            saverY<0 ||
+            saverY+40>window.innerHeight
+        ){
+            saverDY*=-1;
+        }
+
+        text.style.left=saverX+"px";
+        text.style.top=saverY+"px";
+        text.style.transform="none";
+
+        requestAnimationFrame(
+            animate
+        );
+
+    }
+
+    animate();
+
 }
 
-/* SHUTDOWN */
-function shutdown(){
-document.body.innerHTML=
-'<div style="background:black;color:white;height:100vh;display:flex;justify-content:center;align-items:center;font-size:24px;">It is now safe to turn off your computer.</div>';
+function exitScreensaver(){
+
+    screensaver.style.display="none";
+
+}
+
+screensaver.addEventListener(
+    "mousemove",
+    exitScreensaver
+);
+
+screensaver.addEventListener(
+    "keydown",
+    exitScreensaver
+);
+
+screensaver.addEventListener(
+    "click",
+    exitScreensaver
+);
+
+/* ============================================================
+   RIGHT CLICK
+============================================================ */
+
+desktop.addEventListener(
+    "contextmenu",
+    e=>{
+
+        e.preventDefault();
+
+        contextMenu.style.display="block";
+
+        contextMenu.style.left=
+            e.clientX+"px";
+
+        contextMenu.style.top=
+            e.clientY+"px";
+
+    }
+);
+
+function refreshDesktop(){
+
+    contextMenu.style.display="none";
+
+    createDesktopIcons();
+
+}
+
+function createTextFile(){
+
+    contextMenu.style.display="none";
+
+    openNotepad();
+
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+
+document.addEventListener("keydown",e=>{
+
+    if(e.key==="Escape"){
+
+        startMenu.style.display="none";
+        contextMenu.style.display="none";
+
+    }
+
+    if(
+        e.altKey &&
+        e.key==="F4"
+    ){
+
+        e.preventDefault();
+
+        const active=
+            windows.find(
+                w=>
+                    parseInt(
+                        w.win.style.zIndex
+                    )===zIndex
+            );
+
+        if(active){
+            closeWindow(active);
+        }
+
+    }
+
+});
+
+/* ============================================================
+   SYSTEM SHUTDOWN
+============================================================ */
+
+function shutdownSystem(){
+
+    startMenu.style.display="none";
+
+    systemScreen.style.display="flex";
+
+    systemText.textContent=
+        "Windows is shutting down...";
+
+    progressInner.style.width="0%";
+
+    let progress=0;
+
+    const timer=setInterval(()=>{
+
+        progress+=5;
+
+        progressInner.style.width=
+            progress+"%";
+
+        if(progress>=100){
+
+            clearInterval(timer);
+
+            setTimeout(()=>{
+
+                systemText.textContent=
+                    "It is now safe to turn off your computer.";
+
+                progressInner.style.display=
+                    "none";
+
+            },500);
+
+        }
+
+    },80);
+
+}
+
+function rebootSystem(){
+
+    startMenu.style.display="none";
+
+    systemScreen.style.display="flex";
+
+    progressInner.style.display="block";
+
+    progressInner.style.width="0%";
+
+    const lines=[
+        "Windows is shutting down...",
+        "Saving system settings...",
+        "Stopping services...",
+        "Closing programs...",
+        "Restarting computer...",
+        "Starting Windows 98..."
+    ];
+
+    let line=0;
+    let progress=0;
+
+    systemText.textContent=lines[0];
+
+    const timer=setInterval(()=>{
+
+        progress+=4;
+
+        progressInner.style.width=
+            progress+"%";
+
+        if(
+            progress%20===0 &&
+            line<lines.length-1
+        ){
+
+            line++;
+
+            systemText.textContent=
+                lines[line];
+
+        }
+
+        if(progress>=100){
+
+            clearInterval(timer);
+
+            systemScreen.style.display=
+                "none";
+
+            bootSequence();
+
+        }
+
+    },70);
+
+}
+
+/* ============================================================
+   BOOT SEQUENCE
+============================================================ */
+
+function bootSequence(){
+
+    document.getElementById(
+        "loginScreen"
+    ).style.display="none";
+
+    systemScreen.style.display="flex";
+
+    progressInner.style.display="block";
+
+    progressInner.style.width="0%";
+
+    const lines=[
+
+        "PhoenixBIOS 4.0 Release 6.0",
+        "Copyright 1985-1998 Phoenix Technologies Ltd.",
+        "",
+        "CPU: Web Virtual Processor",
+        "Memory Test: 65536K OK",
+        "",
+        "Detecting IDE Primary Master...",
+        "IDE Primary Master: VIRTUAL-HD",
+        "",
+        "Loading Windows 98...",
+        "",
+        "Starting Windows..."
+
+    ];
+
+    let index=0;
+    let progress=0;
+
+    function next(){
+
+        if(index<lines.length){
+
+            systemText.textContent=
+                lines[index];
+
+            index++;
+
+            beep(
+                index%2
+                ? 650
+                : 500,
+                .025
+            );
+
+            setTimeout(next,180);
+
+        }else{
+
+            const timer=setInterval(()=>{
+
+                progress+=5;
+
+                progressInner.style.width=
+                    progress+"%";
+
+                if(progress>=100){
+
+                    clearInterval(timer);
+
+                    setTimeout(()=>{
+
+                        systemScreen.style.display=
+                            "none";
+
+                        showDesktop();
+
+                    },400);
+
+                }
+
+            },50);
+
+        }
+
+    }
+
+    next();
+
+}
+
+function showDesktop(){
+
+    desktop.style.display="block";
+    document.getElementById(
+        "taskbar"
+    ).style.display="flex";
+
+    createDesktopIcons();
+
+}
+
+function login(){
+
+    const name =
+        document.getElementById(
+            "loginName"
+        ).value.trim();
+
+    const password =
+        document.getElementById(
+            "loginPassword"
+        ).value;
+
+    const error =
+        document.getElementById(
+            "loginError"
+        );
+
+    if(!name){
+
+        error.textContent=
+            "Please enter a user name.";
+
+        beep(180,.12);
+
+        return;
+
+    }
+
+    /* Password is intentionally flexible */
+
+    localStorage.setItem(
+        "win98_username",
+        name
+    );
+
+    error.textContent="";
+
+    beep(800,.06);
+
+    bootSequence();
+
+}
+
+document.getElementById(
+    "loginPassword"
+).addEventListener(
+    "keydown",
+    e=>{
+
+        if(e.key==="Enter"){
+            login();
+        }
+
+    }
+);
+
+/* ============================================================
+   INITIALIZATION
+============================================================ */
+
+desktop.style.display="none";
+
+document.getElementById(
+    "taskbar"
+).style.display="none";
+
+const rememberedUser =
+    localStorage.getItem(
+        "win98_username"
+    );
+
+if(rememberedUser){
+
+    document.getElementById(
+        "loginName"
+    ).value=rememberedUser;
+
+    document.getElementById(
+        "loginPassword"
+    ).focus();
+
+}else{
+
+    document.getElementById(
+        "loginName"
+    ).focus();
+
 }
 
 </script>
