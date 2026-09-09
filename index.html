@@ -267,6 +267,83 @@
   }
   #arcade-exit-btn:active{ background:rgba(255,43,214,.3); }
 
+  #ticket-display{
+    position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:52;
+    font-family:'Press Start 2P', monospace; font-size:.55rem; color:#ffe600;
+    background:rgba(10,6,18,.7); border:2px solid #ffe600; border-radius:4px; padding:6px 10px;
+  }
+  #settings-btn{
+    position:fixed; right:14px; top:14px; z-index:52;
+    font-family:'Press Start 2P', monospace; font-size:.5rem; color:var(--cyan);
+    background:rgba(10,6,18,.7); border:2px solid var(--cyan); border-radius:4px; padding:8px 10px; cursor:pointer;
+  }
+  #leaderboard-btn{
+    position:fixed; right:14px; top:60px; z-index:52;
+    font-family:'Press Start 2P', monospace; font-size:.5rem; color:#ffe600;
+    background:rgba(10,6,18,.7); border:2px solid #ffe600; border-radius:4px; padding:8px 10px; cursor:pointer;
+  }
+  #leaderboard-overlay{
+    position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+    background:rgba(2,2,4,.9);
+  }
+  #leaderboard-overlay .panel{
+    background:#0a0612; border:2px solid #ffe600; box-shadow:0 0 30px rgba(255,230,0,.35);
+    padding:24px; max-width:420px; width:90vw;
+  }
+  #leaderboard-overlay h2{ margin:0 0 6px; color:#ffe600; font-size:.75rem; text-align:center; text-shadow:0 0 8px #ffe600; }
+  #leaderboard-overlay .sub{ text-align:center; color:#8a7fb0; font-size:.4rem; margin-bottom:16px; }
+  #leaderboard-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+  .stat-row{
+    display:flex; justify-content:space-between; align-items:center;
+    background:#140a24; border:2px solid #3a2860; border-radius:6px; padding:10px 14px;
+    font-family:'Press Start 2P', monospace; font-size:.42rem; color:#eae6ff;
+  }
+  .stat-row .stat-value{ color:#ffe600; }
+  #leaderboard-close-btn{
+    display:block; margin:0 auto; font-family:'Press Start 2P', monospace; font-size:.5rem;
+    padding:10px 18px; background:#ffe600; color:#050505; border:none; border-radius:4px; cursor:pointer;
+  }
+  #settings-overlay{
+    position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+    background:rgba(2,2,4,.9);
+  }
+  #settings-overlay .panel{
+    background:#0a0612; border:2px solid var(--magenta); box-shadow:0 0 30px rgba(255,43,214,.4);
+    padding:24px; max-width:460px; width:90vw; max-height:85vh; overflow-y:auto;
+  }
+  #settings-overlay h2{ margin:0 0 16px; color:var(--cyan); font-size:.75rem; text-align:center; text-shadow:0 0 8px var(--cyan); }
+  .settings-tabs{ display:flex; gap:8px; margin-bottom:16px; justify-content:center; }
+  .tab-btn{
+    font-family:'Press Start 2P', monospace; font-size:.45rem; padding:8px 14px;
+    background:#140a24; border:2px solid #3a2860; color:#8a7fb0; cursor:pointer; border-radius:4px;
+  }
+  .tab-btn.active{ color:var(--phosphor); border-color:var(--phosphor); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+  #mini-preview{ width:120px; height:140px; margin:0 auto 14px; }
+  #mini-preview canvas{ display:block; }
+  #customize-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+  .skin-swatch{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:#140a24; border:2px solid #3a2860; border-radius:6px; padding:10px 6px;
+    font-family:'Press Start 2P', monospace; font-size:.4rem; color:#eae6ff; cursor:pointer;
+  }
+  .skin-swatch:disabled{ opacity:.4; cursor:not-allowed; }
+  .skin-swatch.equipped{ border-color:var(--phosphor); box-shadow:0 0 10px rgba(57,255,20,.4); }
+  .swatch-dot{ width:26px; height:26px; border-radius:50%; background:var(--swatch-color); border:2px solid #000; }
+  .swatch-sub{ color:#8a7fb0; font-size:.34rem; }
+  .volume-row{ display:flex; align-items:center; justify-content:center; gap:12px; padding:20px 0; }
+  #mute-btn{
+    font-family:'Press Start 2P', monospace; font-size:1rem; color:var(--cyan);
+    background:none; border:none; cursor:pointer; line-height:1;
+  }
+  #mute-btn.muted{ color:#666; }
+  #volume-slider{ width:140px; accent-color:var(--cyan); cursor:pointer; }
+  #settings-close-btn{
+    display:block; margin:16px auto 0; font-family:'Press Start 2P', monospace; font-size:.5rem;
+    padding:10px 18px; background:var(--magenta); color:#050505; border:none; border-radius:4px; cursor:pointer;
+  }
+
 </style>
 </head>
 <body>
@@ -308,6 +385,39 @@
 </div>
 <button id="jump-btn">JUMP</button>
 <button id="arcade-exit-btn">&uarr; STAND UP</button>
+<div id="ticket-display">&#127883; 0</div>
+<button id="settings-btn">&#9881; SETTINGS</button>
+<button id="leaderboard-btn">&#127942; STATS</button>
+
+<div id="settings-overlay">
+  <div class="panel">
+    <h2>SETTINGS</h2>
+    <div class="settings-tabs">
+      <button class="tab-btn active" id="tab-btn-skins">SKINS</button>
+      <button class="tab-btn" id="tab-btn-audio">AUDIO</button>
+    </div>
+    <div id="tab-skins" class="tab-panel active">
+      <div id="mini-preview"></div>
+      <div id="customize-grid"></div>
+    </div>
+    <div id="tab-audio" class="tab-panel">
+      <div class="volume-row">
+        <button id="mute-btn">&#128266;</button>
+        <input type="range" id="volume-slider" min="0" max="100" value="55">
+      </div>
+    </div>
+    <button id="settings-close-btn">CLOSE</button>
+  </div>
+</div>
+
+<div id="leaderboard-overlay">
+  <div class="panel">
+    <h2>YOUR ARCADE STATS</h2>
+    <div class="sub">no servers here, so this is just you vs. you</div>
+    <div id="leaderboard-list"></div>
+    <button id="leaderboard-close-btn">CLOSE</button>
+  </div>
+</div>
 
 <div id="session-restore">
   <div class="restore-inner">
@@ -414,6 +524,157 @@
   const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 ||
     (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
     /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+
+  // =====================================================================
+  // Sound — everything here is synthesized with the Web Audio API (no
+  // audio files to host/load). Browsers require a user gesture before
+  // any audio can play, so nothing actually makes sound until unlock()
+  // runs on the first click/tap/keypress (see near the bottom of the file).
+  // =====================================================================
+  const AudioEngine = (function(){
+    let ctx = null, masterGain = null, musicGain = null, sfxGain = null;
+    let muted = false, volume = 0.55;
+    try { muted = localStorage.getItem('neonArcade.muted') === '1'; } catch(e){}
+    try {
+      const v = parseFloat(localStorage.getItem('neonArcade.volume'));
+      if (!isNaN(v)) volume = Math.max(0, Math.min(1, v));
+    } catch(e){}
+
+    function ensureCtx(){
+      if (ctx) return;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      ctx = new Ctx();
+      masterGain = ctx.createGain();
+      masterGain.gain.value = muted ? 0 : volume;
+      masterGain.connect(ctx.destination);
+      musicGain = ctx.createGain();
+      musicGain.gain.value = 0.32;
+      musicGain.connect(masterGain);
+      sfxGain = ctx.createGain();
+      sfxGain.gain.value = 0.85;
+      sfxGain.connect(masterGain);
+    }
+
+    // a short synthesized blip/tone
+    function tone(freq, duration, type, gainNode, peakGain, delay){
+      if (!ctx) return;
+      const t0 = ctx.currentTime + (delay || 0);
+      const osc = ctx.createOscillator();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(peakGain || 0.3, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+      osc.connect(g); g.connect(gainNode || sfxGain);
+      osc.start(t0); osc.stop(t0 + duration + 0.02);
+    }
+
+    // a short burst of filtered noise, for footsteps/thuds/whooshes
+    function noiseBurst(duration, filterFreq, gainNode, gainVal){
+      if (!ctx) return;
+      const size = Math.max(1, Math.floor(ctx.sampleRate * duration));
+      const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < size; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / size);
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = filterFreq;
+      const g = ctx.createGain();
+      g.gain.value = gainVal || 0.3;
+      src.connect(filter); filter.connect(g); g.connect(gainNode || sfxGain);
+      src.start();
+    }
+
+    function footstep(){ noiseBurst(0.06, 200, sfxGain, 0.16); }
+    function jumpSfx(){ tone(440, 0.12, 'square', sfxGain, 0.22, 0); tone(660, 0.1, 'square', sfxGain, 0.18, 0.05); }
+    function land(){ noiseBurst(0.08, 120, sfxGain, 0.28); }
+    function click(){ tone(880, 0.05, 'square', sfxGain, 0.18, 0); }
+    function launchSfx(){ tone(523.25, 0.1, 'square', sfxGain, 0.28, 0); tone(783.99, 0.14, 'square', sfxGain, 0.28, 0.09); }
+    function whoosh(){ noiseBurst(0.35, 700, sfxGain, 0.14); }
+    function powerOn(){
+      if (!ctx) return;
+      const t0 = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(60, t0);
+      osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.4);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.14, t0 + 0.15);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+      osc.connect(g); g.connect(sfxGain);
+      osc.start(t0); osc.stop(t0 + 0.55);
+    }
+
+    // ---- background music: an actual little composed loop (melody + bass),
+    // not just a scale run — one mellow pattern for the room, one brighter
+    // one for the arcade, each 16 steps with rests for real rhythm/shape ----
+    const N = { A2:110.00, C3:130.81, D3:146.83, E3:164.81, F3:174.61, G3:196.00,
+                A3:220.00, B3:246.94, C4:261.63, D4:293.66, E4:329.63, F4:349.23,
+                G4:392.00, A4:440.00, B4:493.88, C5:523.25, D5:587.33, E5:659.25 };
+
+    const melodyRoom = [N.A3,null,N.C4,N.E4, N.D4,null,N.C4,N.A3, N.G3,null,N.A3,N.C4, N.B3,N.A3,null,null];
+    const bassRoom   = [N.A2,null,null,null, N.F3,null,null,null, N.G3,null,null,null, N.A2,null,null,null];
+    const melodyArcade = [N.E4,N.G4,N.A4,N.G4, N.E4,null,N.C4,N.D4, N.E4,N.D4,N.C4,null, N.A3,N.C4,N.E4,null];
+    const bassArcade   = [N.A2,null,null,null, N.C3,null,null,null, N.A2,null,null,null, N.E3,null,null,null];
+
+    const STEP_SEC = 0.28;
+    let currentMelody = melodyRoom, currentBass = bassRoom;
+    let stepIndex = 0;
+    let musicStarted = false;
+    let musicTimer = null;
+
+    function scheduleStep(){
+      if (ctx && !muted) {
+        const note = currentMelody[stepIndex % currentMelody.length];
+        if (note) tone(note, STEP_SEC * 0.9, 'triangle', musicGain, 0.11, 0);
+        const bnote = currentBass[stepIndex % currentBass.length];
+        if (bnote) tone(bnote, STEP_SEC * 1.6, 'sawtooth', musicGain, 0.06, 0);
+        stepIndex++;
+      }
+      musicTimer = setTimeout(scheduleStep, STEP_SEC * 1000);
+    }
+    function startMusic(){
+      if (musicStarted) return;
+      musicStarted = true;
+      scheduleStep();
+    }
+    function setMood(mood){
+      currentMelody = mood === 'arcade' ? melodyArcade : melodyRoom;
+      currentBass = mood === 'arcade' ? bassArcade : bassRoom;
+      stepIndex = 0; // restart the pattern cleanly on a mood change
+    }
+
+    function setMuted(m){
+      muted = m;
+      try { localStorage.setItem('neonArcade.muted', m ? '1' : '0'); } catch(e){}
+      if (masterGain) masterGain.gain.value = m ? 0 : volume;
+    }
+    function isMuted(){ return muted; }
+
+    function setVolume(v){
+      volume = Math.max(0, Math.min(1, v));
+      try { localStorage.setItem('neonArcade.volume', String(volume)); } catch(e){}
+      if (!muted && masterGain) masterGain.gain.value = volume;
+    }
+    function getVolume(){ return volume; }
+
+    let unlocked = false;
+    function unlock(){
+      if (unlocked) return;
+      unlocked = true;
+      ensureCtx();
+      if (ctx && ctx.state === 'suspended') ctx.resume();
+      startMusic();
+    }
+
+    return { footstep, jump: jumpSfx, land, click, launch: launchSfx, whoosh, powerOn, setMood,
+             setMuted, isMuted, setVolume, getVolume, unlock };
+  })();
 
   const appEl = document.getElementById('app');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -541,6 +802,7 @@
   player.rotation.y=Math.PI;
   scene.add(player);
   let walkTime=0;
+  let lastFootSign=0;
   let walking=false;
   let jumpVelocity=0;
   let wasAirborne=false;
@@ -790,14 +1052,150 @@
   }
   function arcadeHintText(){
     return isMobile
-      ? 'ARCADE MODE<br>drag the joystick or tap a button &bull; tap a game to play &bull; STAND UP to return'
-      : 'ARCADE MODE<br>arrow keys / scroll / joystick &bull; click a game to play &bull; ESC to return';
+      ? 'ARCADE MODE &bull; buttons: PLAY / RANDOM / PREV / NEXT<br>drag the joystick or tap a button &bull; tap a game to play &bull; STAND UP to return'
+      : 'ARCADE MODE &bull; buttons: PLAY / RANDOM / PREV / NEXT<br>arrow keys / scroll / joystick &bull; click a game to play &bull; ESC to return';
   }
 
   const moveKeys = {w:false,a:false,s:false,d:false};
 
+  // =====================================================================
+  // Tickets + character customization
+  // =====================================================================
+  const SKIN_OPTIONS = [
+    { id:'grey',    name:'CLASSIC', color:0xd0d0d0, cost:0  },
+    { id:'cyan',    name:'CYAN',    color:0x22e0ff, cost:10 },
+    { id:'magenta', name:'MAGENTA', color:0xff2bd6, cost:10 },
+    { id:'yellow',  name:'YELLOW',  color:0xffe600, cost:15 },
+    { id:'green',   name:'NEON',    color:0x39ff14, cost:15 },
+    { id:'orange',  name:'ORANGE',  color:0xff8020, cost:20 },
+    { id:'purple',  name:'PURPLE',  color:0xb060e0, cost:25 },
+    { id:'gold',    name:'GOLD',    color:0xffd700, cost:50 },
+  ];
+  let tickets = 0, ownedSkins = ['grey'], equippedSkin = 'grey';
+  try { tickets = parseInt(localStorage.getItem('neonArcade.tickets'), 10) || 0; } catch(e){}
+  try { ownedSkins = JSON.parse(localStorage.getItem('neonArcade.ownedSkins') || '["grey"]'); } catch(e){}
+  try { equippedSkin = localStorage.getItem('neonArcade.equippedSkin') || 'grey'; } catch(e){}
+  if (!Array.isArray(ownedSkins) || ownedSkins.indexOf('grey') === -1) ownedSkins = ['grey'];
+
+  const ticketDisplay = document.getElementById('ticket-display');
+  function refreshTicketDisplay(){ ticketDisplay.innerHTML = '&#127883; ' + tickets; }
+  function addTickets(n){
+    tickets = Math.max(0, tickets + n);
+    try { localStorage.setItem('neonArcade.tickets', String(tickets)); } catch(e){}
+    refreshTicketDisplay();
+  }
+
+  function applySkin(id){
+    const skin = SKIN_OPTIONS.find(s => s.id === id) || SKIN_OPTIONS[0];
+    playerMat.color.set(skin.color);
+    if (typeof miniPreview !== 'undefined') miniPreview.setColor(skin.color);
+  }
+  function equipSkin(id){
+    if (ownedSkins.indexOf(id) === -1) return;
+    equippedSkin = id;
+    try { localStorage.setItem('neonArcade.equippedSkin', id); } catch(e){}
+    applySkin(id);
+    renderCustomizeMenu();
+  }
+  function buySkin(id){
+    const skin = SKIN_OPTIONS.find(s => s.id === id);
+    if (!skin || ownedSkins.indexOf(id) !== -1 || tickets < skin.cost) return;
+    addTickets(-skin.cost);
+    ownedSkins.push(id);
+    try { localStorage.setItem('neonArcade.ownedSkins', JSON.stringify(ownedSkins)); } catch(e){}
+    equipSkin(id);
+  }
+  playerMat.color.set((SKIN_OPTIONS.find(s => s.id === equippedSkin) || SKIN_OPTIONS[0]).color);
+  refreshTicketDisplay();
+
+  // earn tickets: a slow trickle for time spent, plus a bonus the first
+  // time you launch a game you haven't played before
+  let ticketTimeAccumulator = 0;
+  let playedGames = [];
+  try { playedGames = JSON.parse(localStorage.getItem('neonArcade.playedGames') || '[]'); } catch(e){}
+  function recordGamePlayed(index){
+    const game = GAMES[index];
+    if (!game || playedGames.indexOf(game.title) !== -1) return;
+    playedGames.push(game.title);
+    try { localStorage.setItem('neonArcade.playedGames', JSON.stringify(playedGames)); } catch(e){}
+    addTickets(3);
+  }
+
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const customizeGrid = document.getElementById('customize-grid');
+
+  // tiny standalone 3D preview so you can see skin colors on the character
+  const miniPreview = (function(){
+    const container = document.getElementById('mini-preview');
+    const w = 120, h = 140;
+    const r2 = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    r2.setSize(w, h);
+    container.appendChild(r2.domElement);
+    const s2 = new THREE.Scene();
+    const c2 = new THREE.PerspectiveCamera(35, w / h, 0.1, 10);
+    c2.position.set(0, 1.05, 2.1);
+    c2.lookAt(0, 1.0, 0);
+    s2.add(new THREE.AmbientLight(0xffffff, 1.3));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.6);
+    dl.position.set(1, 2, 2);
+    s2.add(dl);
+
+    const mat2 = new THREE.MeshStandardMaterial({ color:0xd0d0d0, roughness:0.8 });
+    const grp = new THREE.Group();
+    const h2 = new THREE.Mesh(new THREE.SphereGeometry(0.19,16,10), mat2); h2.position.y=1.52; grp.add(h2);
+    const t2 = new THREE.Mesh(new THREE.BoxGeometry(.30,.48,.20), mat2); t2.position.y=1.12; grp.add(t2);
+    const legGeo2 = new THREE.BoxGeometry(.105,.48,.13); legGeo2.translate(0,-.24,0);
+    const lL = new THREE.Mesh(legGeo2, mat2); lL.position.set(-.078,.86,0); grp.add(lL);
+    const lR = new THREE.Mesh(legGeo2.clone(), mat2); lR.position.set(.078,.86,0); grp.add(lR);
+    const armGeo2 = new THREE.BoxGeometry(.09,.40,.12); armGeo2.translate(0,-.20,0);
+    const aL = new THREE.Mesh(armGeo2, mat2); aL.position.set(-.205,1.33,0); grp.add(aL);
+    const aR = new THREE.Mesh(armGeo2.clone(), mat2); aR.position.set(.205,1.33,0); grp.add(aR);
+    grp.position.y = -1.0;
+    s2.add(grp);
+
+    function loop(){ requestAnimationFrame(loop); grp.rotation.y += 0.015; r2.render(s2, c2); }
+    loop();
+    return { setColor(hex){ mat2.color.set(hex); } };
+  })();
+
+  function renderCustomizeMenu(){
+    customizeGrid.innerHTML = '';
+    SKIN_OPTIONS.forEach(skin => {
+      const owned = ownedSkins.indexOf(skin.id) !== -1;
+      const equipped = equippedSkin === skin.id;
+      const swatch = document.createElement('button');
+      swatch.className = 'skin-swatch' + (equipped ? ' equipped' : '');
+      swatch.style.setProperty('--swatch-color', '#' + skin.color.toString(16).padStart(6, '0'));
+      swatch.innerHTML = `<span class="swatch-dot"></span><span>${skin.name}</span><span class="swatch-sub">${equipped ? 'EQUIPPED' : owned ? 'TAP TO WEAR' : ('\u{1F3AB} ' + skin.cost)}</span>`;
+      swatch.disabled = !owned && tickets < skin.cost;
+      swatch.addEventListener('click', () => { AudioEngine.click(); if (owned) equipSkin(skin.id); else buySkin(skin.id); });
+      customizeGrid.appendChild(swatch);
+    });
+  }
+  settingsBtn.addEventListener('click', () => {
+    renderCustomizeMenu();
+    settingsOverlay.style.display = 'flex';
+  });
+  document.getElementById('settings-close-btn').addEventListener('click', () => {
+    settingsOverlay.style.display = 'none';
+  });
+  const tabBtnSkins = document.getElementById('tab-btn-skins');
+  const tabBtnAudio = document.getElementById('tab-btn-audio');
+  const tabSkins = document.getElementById('tab-skins');
+  const tabAudio = document.getElementById('tab-audio');
+  tabBtnSkins.addEventListener('click', () => {
+    tabBtnSkins.classList.add('active'); tabBtnAudio.classList.remove('active');
+    tabSkins.classList.add('active'); tabAudio.classList.remove('active');
+  });
+  tabBtnAudio.addEventListener('click', () => {
+    tabBtnAudio.classList.add('active'); tabBtnSkins.classList.remove('active');
+    tabAudio.classList.add('active'); tabSkins.classList.remove('active');
+  });
+
+
   function tryJump(){
-    if (Math.abs(player.position.y-FLOOR_Y)<0.03) jumpVelocity=JUMP_SPEED;
+    if (Math.abs(player.position.y-FLOOR_Y)<0.03) { jumpVelocity=JUMP_SPEED; AudioEngine.jump(); }
   }
 
   // ---- mobile: a virtual movement pad (replaces WASD) and a jump button.
@@ -917,6 +1315,7 @@
     if (arcadePowered) { setRoomLighting(true); return; }
     arcadePowered = true;
     setRoomLighting(true);
+    AudioEngine.powerOn();
     // (the "ARCADE" sign itself is always fully visible now — see
     // marqueeMaterial's creation — only the room's lights power on here)
   }
@@ -947,6 +1346,8 @@
     powerOnArcade();
     roomPrompt.style.display = 'none';
     document.getElementById('crosshair-hint').innerHTML = arcadeHintText();
+    if (!fromRestore) AudioEngine.whoosh();
+    AudioEngine.setMood('arcade');
     // (skipped when restoring a saved session — that path fills these in
     // from storage instead, below in restoreSavedSession)
     if (!fromRestore) {
@@ -972,6 +1373,8 @@
     phase = PHASE_ROOM;
     player.visible = true;
     document.getElementById('crosshair-hint').innerHTML = roomHintText();
+    AudioEngine.whoosh();
+    AudioEngine.setMood('room');
 
     // ease back to exactly how the camera was framed before you sat down,
     // instead of snapping or guessing at a generic offset
@@ -1054,6 +1457,7 @@
     e.preventDefault();
     if (e.deltaY > 0) selected = Math.min(selected + 1, GAMES.length - 1);
     else selected = Math.max(selected - 1, 0);
+    AudioEngine.click();
     drawMenu();
     saveSession({phase:PHASE_ARCADE});
   }, { passive: false });
@@ -1067,8 +1471,40 @@
   let joystickRepeatTimer = null;
 
   function joystickStep(){
-    if (joystickNorm > 0.65) { selected = Math.min(selected + 1, GAMES.length - 1); drawMenu(); saveSession({phase:PHASE_ARCADE}); }
-    else if (joystickNorm < -0.65) { selected = Math.max(selected - 1, 0); drawMenu(); saveSession({phase:PHASE_ARCADE}); }
+    if (joystickNorm > 0.65) { selected = Math.min(selected + 1, GAMES.length - 1); AudioEngine.click(); drawMenu(); saveSession({phase:PHASE_ARCADE}); }
+    else if (joystickNorm < -0.65) { selected = Math.max(selected - 1, 0); AudioEngine.click(); drawMenu(); saveSession({phase:PHASE_ARCADE}); }
+  }
+
+  // The cabinet's 4 physical buttons, left to right: PLAY (green),
+  // RANDOM/"surprise me" (yellow), PREV (cyan), NEXT (magenta).
+  function pressCabinetButton(index){
+    switch (index) {
+      case 0: // PLAY
+        launchGame(selected);
+        break;
+      case 1: // RANDOM
+        if (GAMES.length > 1) {
+          let next;
+          do { next = Math.floor(Math.random() * GAMES.length); } while (next === selected);
+          selected = next;
+        }
+        AudioEngine.click();
+        drawMenu();
+        launchGame(selected);
+        break;
+      case 2: // PREV
+        selected = Math.max(selected - 1, 0);
+        AudioEngine.click();
+        drawMenu();
+        saveSession({phase:PHASE_ARCADE});
+        break;
+      case 3: // NEXT
+        selected = Math.min(selected + 1, GAMES.length - 1);
+        AudioEngine.click();
+        drawMenu();
+        saveSession({phase:PHASE_ARCADE});
+        break;
+    }
   }
 
   renderer.domElement.addEventListener('pointerdown', e => {
@@ -1126,7 +1562,7 @@
         selected = hoverRow;
         launchGame(selected);
       } else if (hoveredButton >= 0) {
-        launchGame(selected);
+        pressCabinetButton(hoveredButton);
       }
     } else if (phase === PHASE_ROOM && playerNearCabinet) {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -1175,11 +1611,13 @@
       }
       if (k === 'ArrowDown') {
         selected = Math.min(selected + 1, GAMES.length - 1);
+        AudioEngine.click();
         drawMenu();
         saveSession({phase:PHASE_ARCADE});
         e.preventDefault();
       } else if (k === 'ArrowUp') {
         selected = Math.max(selected - 1, 0);
+        AudioEngine.click();
         drawMenu();
         saveSession({phase:PHASE_ARCADE});
         e.preventDefault();
@@ -1248,6 +1686,8 @@
     gameOpen = true;
     phase = PHASE_GAME;
     saveSession({phase:PHASE_GAME, gameIndex:index});
+    AudioEngine.launch();
+    recordGamePlayed(index);
 
     savedCameraPos = camera.position.clone();
     savedTarget = controls.target.clone();
@@ -1280,6 +1720,7 @@
     clearTimeout(overlayFadeTimer);
     overlay.style.display = 'none';
     frame.src = 'about:blank';
+    AudioEngine.whoosh();
     const backPos = savedCameraPos || camera.position.clone();
     const backTarget = savedTarget || controls.target.clone();
     animateCameraTo(backPos, backTarget, 700, () => {
@@ -1383,7 +1824,7 @@
       player.position.y=FLOOR_Y;
       jumpVelocity=0;
     }
-    if(wasAirborne && !isAirborne) landingBounce = 1; // just touched down
+    if(wasAirborne && !isAirborne) { landingBounce = 1; AudioEngine.land(); } // just touched down
     wasAirborne = isAirborne;
     landingBounce = Math.max(0, landingBounce - dt*6);
     player.scale.set(1 + landingBounce*0.10, 1 - landingBounce*0.14, 1 + landingBounce*0.10);
@@ -1424,6 +1865,8 @@
     }else if(walking){
       walkTime+=dt*10;
       const swing=Math.sin(walkTime)*0.52;
+      const footSign = swing > 0 ? 1 : -1;
+      if (footSign !== lastFootSign) { AudioEngine.footstep(); lastFootSign = footSign; }
       legL.rotation.x=swing; legR.rotation.x=-swing;
       armL.rotation.x=-swing*.45; armR.rotation.x=swing*.45;
       torso.position.y=1.12+Math.abs(Math.sin(walkTime*2))*.012;
@@ -1452,6 +1895,12 @@
     if (!joystickDragging) stickTilt.rotation.x *= 0.82;
     screenGlow.intensity = 1.2 + Math.sin(Date.now() * 0.004) * 0.2;
     updateRoomProximity();
+
+    ticketTimeAccumulator += dt;
+    if (ticketTimeAccumulator > 30) {
+      ticketTimeAccumulator = 0;
+      addTickets(1);
+    }
 
     saveAccumulator += dt;
     if (saveAccumulator > 2) {
@@ -1506,6 +1955,35 @@
     if (phase === PHASE_ROOM) {
       updateRoomProximity();
     }
+  });
+
+  // ---- audio unlock + mute button. Browsers block audio until a real user
+  // gesture happens, so the very first click/tap/keypress anywhere on the
+  // page starts the (already-silent-until-now) background music.
+  function unlockAudioOnce(){
+    AudioEngine.unlock();
+    window.removeEventListener('pointerdown', unlockAudioOnce);
+    window.removeEventListener('keydown', unlockAudioOnce);
+  }
+  window.addEventListener('pointerdown', unlockAudioOnce);
+  window.addEventListener('keydown', unlockAudioOnce);
+
+  const muteBtn = document.getElementById('mute-btn');
+  const volumeSlider = document.getElementById('volume-slider');
+  function refreshMuteBtn(){
+    const m = AudioEngine.isMuted();
+    muteBtn.innerHTML = m ? '&#128263;' : '&#128266;';
+    muteBtn.classList.toggle('muted', m);
+  }
+  volumeSlider.value = Math.round(AudioEngine.getVolume() * 100);
+  refreshMuteBtn();
+  muteBtn.addEventListener('click', () => {
+    AudioEngine.setMuted(!AudioEngine.isMuted());
+    refreshMuteBtn();
+  });
+  volumeSlider.addEventListener('input', () => {
+    AudioEngine.setVolume(volumeSlider.value / 100);
+    if (AudioEngine.isMuted()) { AudioEngine.setMuted(false); refreshMuteBtn(); } // dragging the slider un-mutes, same as most volume UIs
   });
 
   function reveal(){
