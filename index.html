@@ -270,24 +270,18 @@
   #ticket-display{
     position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:52;
     font-family:'Press Start 2P', monospace; font-size:.55rem; color:#ffe600;
-    background:rgba(10,6,18,.78); border:2px solid #ffe600; border-radius:4px; padding:6px 10px;
-    transition:opacity .25s, top .25s;
+    background:rgba(10,6,18,.7); border:2px solid #ffe600; border-radius:4px; padding:6px 10px;
   }
-  #settings-btn,#leaderboard-btn{
-    position:fixed; right:14px; z-index:52;
-    font-family:'Press Start 2P', monospace; font-size:.5rem;
-    background:rgba(10,6,18,.78); border-radius:4px; padding:8px 10px; cursor:pointer;
-    transition:opacity .25s, top .25s, transform .2s;
+  #settings-btn{
+    position:fixed; right:14px; top:14px; z-index:52;
+    font-family:'Press Start 2P', monospace; font-size:.5rem; color:var(--cyan);
+    background:rgba(10,6,18,.7); border:2px solid var(--cyan); border-radius:4px; padding:8px 10px; cursor:pointer;
   }
-  #settings-btn{top:14px;color:var(--cyan);border:2px solid var(--cyan);}
-  #leaderboard-btn{top:60px;color:#ffe600;border:2px solid #ffe600;}
-  body.game-playing #settings-btn{top:60px;}
-  body.game-playing #leaderboard-btn{top:106px;}
-  body.game-playing #settings-btn,
-  body.game-playing #leaderboard-btn,
-  body.game-playing #ticket-display{opacity:.22;}
-  body.game-playing #settings-btn:hover,
-  body.game-playing #leaderboard-btn:hover{opacity:1;}
+  #leaderboard-btn{
+    position:fixed; right:14px; top:60px; z-index:52;
+    font-family:'Press Start 2P', monospace; font-size:.5rem; color:#ffe600;
+    background:rgba(10,6,18,.7); border:2px solid #ffe600; border-radius:4px; padding:8px 10px; cursor:pointer;
+  }
   #leaderboard-overlay{
     position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     background:rgba(2,2,4,.9);
@@ -318,11 +312,15 @@
     padding:24px; max-width:460px; width:90vw; max-height:85vh; overflow-y:auto;
   }
   #settings-overlay h2{ margin:0 0 16px; color:var(--cyan); font-size:.75rem; text-align:center; text-shadow:0 0 8px var(--cyan); }
-  .settings-section-title{
-    color:#8a7fb0; font-size:.4rem; text-align:center; margin:10px 0 8px;
-    letter-spacing:.08em;
+  .settings-tabs{ display:flex; gap:8px; margin-bottom:16px; justify-content:center; }
+  .tab-btn{
+    font-family:'Press Start 2P', monospace; font-size:.45rem; padding:8px 14px;
+    background:#140a24; border:2px solid #3a2860; color:#8a7fb0; cursor:pointer; border-radius:4px;
   }
-  #mini-preview{ width:120px; height:140px; margin:0 auto 8px; }
+  .tab-btn.active{ color:var(--phosphor); border-color:var(--phosphor); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+  #mini-preview{ width:120px; height:140px; margin:0 auto 14px; }
   #mini-preview canvas{ display:block; }
   #customize-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
   .skin-swatch{
@@ -386,7 +384,7 @@
   <div id="move-pad-outer"><div id="move-pad-nub"></div></div>
 </div>
 <button id="jump-btn">JUMP</button>
-<button id="arcade-exit-btn">&uarr; EXIT</button>
+<button id="arcade-exit-btn">&uarr; STAND UP</button>
 <div id="ticket-display">&#127883; 0</div>
 <button id="settings-btn">&#9881; SETTINGS</button>
 <button id="leaderboard-btn">&#127942; STATS</button>
@@ -394,13 +392,19 @@
 <div id="settings-overlay">
   <div class="panel">
     <h2>SETTINGS</h2>
-    <div class="settings-section-title">PLAYER</div>
-    <div id="mini-preview"></div>
-    <div id="customize-grid"></div>
-    <div class="settings-section-title">VOLUME</div>
-    <div class="volume-row">
-      <button id="mute-btn">&#128266;</button>
-      <input type="range" id="volume-slider" min="0" max="100" value="55">
+    <div class="settings-tabs">
+      <button class="tab-btn active" id="tab-btn-skins">SKINS</button>
+      <button class="tab-btn" id="tab-btn-audio">AUDIO</button>
+    </div>
+    <div id="tab-skins" class="tab-panel active">
+      <div id="mini-preview"></div>
+      <div id="customize-grid"></div>
+    </div>
+    <div id="tab-audio" class="tab-panel">
+      <div class="volume-row">
+        <button id="mute-btn">&#128266;</button>
+        <input type="range" id="volume-slider" min="0" max="100" value="55">
+      </div>
     </div>
     <button id="settings-close-btn">CLOSE</button>
   </div>
@@ -408,8 +412,8 @@
 
 <div id="leaderboard-overlay">
   <div class="panel">
-    <h2>PERSONAL LEADERBOARD</h2>
-    <div class="sub">LOCAL ONLY &bull; YOUR BEST RUNS</div>
+    <h2>YOUR ARCADE STATS</h2>
+    <div class="sub">no servers here, so this is just you vs. you</div>
     <div id="leaderboard-list"></div>
     <button id="leaderboard-close-btn">CLOSE</button>
   </div>
@@ -423,8 +427,8 @@
 </div>
 
 <div id="game-overlay">
-  <button id="back-btn">&larr; BACK</button>
-  <a id="open-tab-btn" href="#" target="_blank" rel="noopener">OPEN TAB &nearr;</a>
+  <button id="back-btn">&larr; BACK (ESC)</button>
+  <a id="open-tab-btn" href="#" target="_blank" rel="noopener">OPEN IN TAB &nearr;</a>
   <iframe id="game-frame" src="about:blank" title="game"></iframe>
 </div>
 
@@ -1065,7 +1069,7 @@
     { id:'green',   name:'NEON',    color:0x39ff14, cost:15 },
     { id:'orange',  name:'ORANGE',  color:0xff8020, cost:20 },
     { id:'purple',  name:'PURPLE',  color:0xb060e0, cost:25 },
-    { id:'gold',    name:'GOLD',    color:0xffd700, cost:50 },
+    { id:'gold',    name:'GOLD',    color:0xffd700, cost:50, metalness:0.9, roughness:0.15 },
   ];
   let tickets = 0, ownedSkins = ['grey'], equippedSkin = 'grey';
   try { tickets = parseInt(localStorage.getItem('neonArcade.tickets'), 10) || 0; } catch(e){}
@@ -1084,7 +1088,9 @@
   function applySkin(id){
     const skin = SKIN_OPTIONS.find(s => s.id === id) || SKIN_OPTIONS[0];
     playerMat.color.set(skin.color);
-    if (typeof miniPreview !== 'undefined') miniPreview.setColor(skin.color);
+    playerMat.metalness = skin.metalness || 0;
+    playerMat.roughness = skin.roughness != null ? skin.roughness : 0.9;
+    if (typeof miniPreview !== 'undefined') miniPreview.setColor(skin.color, skin.metalness || 0, skin.roughness != null ? skin.roughness : 0.9);
   }
   function equipSkin(id){
     if (ownedSkins.indexOf(id) === -1) return;
@@ -1101,7 +1107,12 @@
     try { localStorage.setItem('neonArcade.ownedSkins', JSON.stringify(ownedSkins)); } catch(e){}
     equipSkin(id);
   }
-  playerMat.color.set((SKIN_OPTIONS.find(s => s.id === equippedSkin) || SKIN_OPTIONS[0]).color);
+  (function(){
+    const skin = SKIN_OPTIONS.find(s => s.id === equippedSkin) || SKIN_OPTIONS[0];
+    playerMat.color.set(skin.color);
+    playerMat.metalness = skin.metalness || 0;
+    playerMat.roughness = skin.roughness != null ? skin.roughness : 0.9;
+  })();
   refreshTicketDisplay();
 
   // earn tickets: a slow trickle for time spent, plus a bonus the first
@@ -1109,33 +1120,9 @@
   let ticketTimeAccumulator = 0;
   let playedGames = [];
   try { playedGames = JSON.parse(localStorage.getItem('neonArcade.playedGames') || '[]'); } catch(e){}
-
-  // Personal leaderboard: everything stays local in this browser.
-  let gameStats = {};
-  let totalLaunches = 0;
-  let totalPlaySeconds = 0;
-  try { gameStats = JSON.parse(localStorage.getItem('neonArcade.gameStats') || '{}'); } catch(e){}
-  try { totalLaunches = Number(localStorage.getItem('neonArcade.totalLaunches')) || 0; } catch(e){}
-  try { totalPlaySeconds = Number(localStorage.getItem('neonArcade.totalPlaySeconds')) || 0; } catch(e){}
-  let playStartedAt = null;
-  let currentGameIndex = -1;
-
-  function saveLeaderboardData(){
-    try {
-      localStorage.setItem('neonArcade.gameStats', JSON.stringify(gameStats));
-      localStorage.setItem('neonArcade.totalLaunches', String(totalLaunches));
-      localStorage.setItem('neonArcade.totalPlaySeconds', String(totalPlaySeconds));
-    } catch(e){}
-  }
-
   function recordGamePlayed(index){
     const game = GAMES[index];
-    if (!game) return;
-    gameStats[game.title] = Number(gameStats[game.title]) || 0;
-    gameStats[game.title]++;
-    totalLaunches++;
-    saveLeaderboardData();
-    if (playedGames.indexOf(game.title) !== -1) return;
+    if (!game || playedGames.indexOf(game.title) !== -1) return;
     playedGames.push(game.title);
     try { localStorage.setItem('neonArcade.playedGames', JSON.stringify(playedGames)); } catch(e){}
     addTickets(3);
@@ -1176,7 +1163,7 @@
 
     function loop(){ requestAnimationFrame(loop); grp.rotation.y += 0.015; r2.render(s2, c2); }
     loop();
-    return { setColor(hex){ mat2.color.set(hex); } };
+    return { setColor(hex, metalness, roughness){ mat2.color.set(hex); mat2.metalness = metalness || 0; mat2.roughness = roughness != null ? roughness : 0.8; } };
   })();
 
   function renderCustomizeMenu(){
@@ -1200,44 +1187,19 @@
   document.getElementById('settings-close-btn').addEventListener('click', () => {
     settingsOverlay.style.display = 'none';
   });
-
-
-  const leaderboardBtn = document.getElementById('leaderboard-btn');
-  const leaderboardOverlay = document.getElementById('leaderboard-overlay');
-  const leaderboardList = document.getElementById('leaderboard-list');
-
-  function renderLeaderboard(){
-    const ranked = Object.entries(gameStats)
-      .sort((a,b) => b[1] - a[1])
-      .slice(0,8);
-
-    const playTime = totalPlaySeconds + (playStartedAt ? (Date.now() - playStartedAt) / 1000 : 0);
-    const minutes = Math.floor(playTime / 60);
-    leaderboardList.innerHTML = `
-      <div class="stat-row"><span>GAMES PLAYED</span><span class="stat-value">${totalLaunches}</span></div>
-      <div class="stat-row"><span>ARCADE TIME</span><span class="stat-value">${minutes}M</span></div>
-      <div class="stat-row"><span>TICKETS</span><span class="stat-value">${tickets}</span></div>
-      <div class="settings-section-title" style="margin-top:14px">MOST PLAYED</div>
-      ${ranked.length ? ranked.map((x,i) =>
-        `<div class="stat-row"><span>${i+1}. ${x[0]}</span><span class="stat-value">${x[1]}X</span></div>`
-      ).join('') : '<div class="sub" style="text-align:center">PLAY A GAME TO START YOUR LEADERBOARD</div>'}
-    `;
-  }
-
-  leaderboardBtn.addEventListener('click', () => {
-    renderLeaderboard();
-    leaderboardOverlay.style.display = 'flex';
+  const tabBtnSkins = document.getElementById('tab-btn-skins');
+  const tabBtnAudio = document.getElementById('tab-btn-audio');
+  const tabSkins = document.getElementById('tab-skins');
+  const tabAudio = document.getElementById('tab-audio');
+  tabBtnSkins.addEventListener('click', () => {
+    tabBtnSkins.classList.add('active'); tabBtnAudio.classList.remove('active');
+    tabSkins.classList.add('active'); tabAudio.classList.remove('active');
   });
-  document.getElementById('leaderboard-close-btn').addEventListener('click', () => {
-    leaderboardOverlay.style.display = 'none';
+  tabBtnAudio.addEventListener('click', () => {
+    tabBtnAudio.classList.add('active'); tabBtnSkins.classList.remove('active');
+    tabAudio.classList.add('active'); tabSkins.classList.remove('active');
   });
-  settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) settingsOverlay.style.display = 'none'; });
-  leaderboardOverlay.addEventListener('click', e => { if (e.target === leaderboardOverlay) leaderboardOverlay.style.display = 'none'; });
 
-  function closeMenus(){
-    settingsOverlay.style.display = 'none';
-    leaderboardOverlay.style.display = 'none';
-  }
 
   function tryJump(){
     if (Math.abs(player.position.y-FLOOR_Y)<0.03) { jumpVelocity=JUMP_SPEED; AudioEngine.jump(); }
@@ -1624,16 +1586,9 @@
     const k = e.key;
     const lower = k.toLowerCase();
 
-    if (k === 'Escape') {
-      if (settingsOverlay.style.display === 'flex' || leaderboardOverlay.style.display === 'flex') {
-        closeMenus();
-        e.preventDefault();
-        return;
-      }
-      if (gameOpen) {
-        closeGame();
-        return;
-      }
+    if (gameOpen) {
+      if (k === 'Escape') closeGame();
+      return;
     }
 
     if (cameraAnimating) return;
@@ -1737,10 +1692,6 @@
     if (!game || gameOpen || cameraAnimating) return;
     gameOpen = true;
     phase = PHASE_GAME;
-    currentGameIndex = index;
-    playStartedAt = Date.now();
-    document.body.classList.add('game-playing');
-    closeMenus();
     saveSession({phase:PHASE_GAME, gameIndex:index});
     AudioEngine.launch();
     recordGamePlayed(index);
@@ -1774,13 +1725,6 @@
   function closeGame(){
     if (!gameOpen || cameraAnimating) return;
     clearTimeout(overlayFadeTimer);
-    if (playStartedAt) {
-      totalPlaySeconds += (Date.now() - playStartedAt) / 1000;
-      playStartedAt = null;
-      saveLeaderboardData();
-    }
-    currentGameIndex = -1;
-    document.body.classList.remove('game-playing');
     overlay.style.display = 'none';
     frame.src = 'about:blank';
     AudioEngine.whoosh();
@@ -1796,29 +1740,7 @@
   }
   backBtn.addEventListener('click', closeGame);
 
-  // Future games can report real scores into this personal leaderboard.
-  // Example from a game iframe:
-  // parent.postMessage({type:'arcadeScore', game:'Terminal', score:1234}, '*');
-  window.addEventListener('message', e => {
-    const d = e.data || {};
-    if (d.type !== 'arcadeScore' || !gameOpen) return;
-    const game = GAMES[currentGameIndex];
-    if (!game) return;
-    const score = Number(d.score);
-    if (!Number.isFinite(score)) return;
-    const key = game.title + '.__score';
-    const best = Number(localStorage.getItem('neonArcade.' + key)) || 0;
-    if (score > best) {
-      try { localStorage.setItem('neonArcade.' + key, String(score)); } catch(err){}
-    }
-  });
-
   window.addEventListener('beforeunload', () => {
-    if (gameOpen && playStartedAt) {
-      totalPlaySeconds += (Date.now() - playStartedAt) / 1000;
-      playStartedAt = null;
-      saveLeaderboardData();
-    }
     saveSession({phase: gameOpen ? PHASE_GAME : phase, gameIndex:selected});
   });
 
@@ -1990,11 +1912,6 @@
     saveAccumulator += dt;
     if (saveAccumulator > 2) {
       saveAccumulator = 0;
-      if (gameOpen && playStartedAt) {
-        totalPlaySeconds += (Date.now() - playStartedAt) / 1000;
-        playStartedAt = Date.now();
-        saveLeaderboardData();
-      }
       if (phase === PHASE_ROOM) saveSession({phase:PHASE_ROOM});
     }
 
