@@ -328,14 +328,21 @@
   .admin-status{margin:14px auto 0;text-align:center;font:10px monospace;letter-spacing:.08em;color:#6f668c;}
   .admin-status.on{color:#39ff14;text-shadow:0 0 8px #39ff14;}
   #admin-overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.94);}
-  #admin-overlay .panel{background:#080808;border:2px solid #39ff14;box-shadow:0 0 28px rgba(57,255,20,.22);padding:24px;width:min(400px,90vw);}
+  #admin-overlay .panel{background:#080808;border:2px solid #39ff14;box-shadow:0 0 28px rgba(57,255,20,.22);padding:22px;width:min(330px,90vw);}
   #admin-overlay h2{margin:0 0 8px;color:#39ff14;font:14px 'Press Start 2P',monospace;text-align:center;}
-  #admin-overlay p{color:#777;text-align:center;font:11px monospace;line-height:1.5;}
-  #admin-code{width:100%;box-sizing:border-box;background:#020402;color:#39ff14;border:1px solid #245d24;padding:11px;font:14px monospace;outline:none;text-align:center;}
-  #admin-code:focus{border-color:#39ff14;}
-  #admin-actions{display:flex;gap:8px;justify-content:center;margin-top:14px;}
-  #admin-actions button{font:10px 'Press Start 2P',monospace;padding:9px 12px;border:0;border-radius:3px;cursor:pointer;}
-  #admin-login-btn{background:#39ff14;color:#000;} #admin-cancel-btn{background:#222;color:#aaa;}
+  #admin-overlay p{color:#777;text-align:center;font:11px monospace;line-height:1.5;margin:0 0 14px;}
+  #admin-pin-display{height:38px;box-sizing:border-box;background:#020402;color:#39ff14;border:1px solid #245d24;display:flex;align-items:center;justify-content:center;letter-spacing:.35em;font:18px monospace;margin-bottom:12px;text-shadow:0 0 7px #39ff14;}
+  #admin-pin-display.error{color:#ff3b5c;border-color:#7b2030;text-shadow:0 0 7px #ff3b5c;}
+  #admin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  #admin-pad button{height:46px;font:12px 'Press Start 2P',monospace;color:#39ff14;background:#101610;border:1px solid #245d24;border-radius:3px;cursor:pointer;}
+  #admin-pad button:hover{background:#182418;border-color:#39ff14;}
+  #admin-pad button:active{transform:translateY(1px);}
+  #admin-pad button.lit{background:#39ff14;color:#050505;border-color:#9cff9c;box-shadow:0 0 14px rgba(57,255,20,.85),inset 0 0 10px rgba(255,255,255,.18);text-shadow:none;}
+  #admin-pad .pin-clear.lit{background:#ff3b5c;color:#050505;border-color:#ff9aaa;box-shadow:0 0 14px rgba(255,59,92,.75);}
+  #admin-pad .pin-enter.lit{background:#9cff9c;color:#000;box-shadow:0 0 16px rgba(57,255,20,.95);}
+  #admin-pad .pin-clear{color:#ff7b8f;border-color:#642631;}
+  #admin-pad .pin-enter{color:#000;background:#39ff14;border-color:#39ff14;}
+  #admin-cancel-btn{width:100%;margin-top:10px;height:36px;font:10px 'Press Start 2P',monospace;color:#aaa;background:#222;border:0;border-radius:3px;cursor:pointer;}
   #settings-overlay{
     position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     background:rgba(2,2,4,.9);
@@ -454,9 +461,15 @@
 <div id="admin-overlay">
   <div class="panel">
     <h2>OPERATOR ACCESS</h2>
-    <p>Restricted cabinet controls.<br>Enter the operator code to continue.</p>
-    <input id="admin-code" type="password" autocomplete="off" spellcheck="false" aria-label="operator code">
-    <div id="admin-actions"><button id="admin-login-btn">UNLOCK</button><button id="admin-cancel-btn">CANCEL</button></div>
+    <p>Restricted cabinet controls.<br>Enter operator PIN.</p>
+    <div id="admin-pin-display" aria-label="operator PIN">&bull;&bull;&bull;&bull;</div>
+    <div id="admin-pad">
+      <button data-pin="1">1</button><button data-pin="2">2</button><button data-pin="3">3</button>
+      <button data-pin="4">4</button><button data-pin="5">5</button><button data-pin="6">6</button>
+      <button data-pin="7">7</button><button data-pin="8">8</button><button data-pin="9">9</button>
+      <button class="pin-clear" data-pin="clear">CLR</button><button data-pin="0">0</button><button class="pin-enter" data-pin="enter">OK</button>
+    </div>
+    <button id="admin-cancel-btn">CANCEL</button>
   </div>
 </div>
 
@@ -1191,32 +1204,62 @@
     clearCosmetics();
     if(id==='none') return;
     const group=playerCosmeticGroup;
-    const dark=new THREE.MeshStandardMaterial({color:0x101018,metalness:.65,roughness:.22});
-    const accent=new THREE.MeshStandardMaterial({color:0x22e0ff,metalness:.55,roughness:.16,emissive:0x05242a,emissiveIntensity:.25});
+    const dark=new THREE.MeshStandardMaterial({color:0x11131a,metalness:.55,roughness:.25});
+    const accent=new THREE.MeshStandardMaterial({color:0x22e0ff,metalness:.45,roughness:.18,emissive:0x05242a,emissiveIntensity:.28});
+    const gold=new THREE.MeshStandardMaterial({color:0xffd700,metalness:.95,roughness:.08,emissive:0x3b2400,emissiveIntensity:.18});
+
     if(id==='cap'){
-      const crown=new THREE.Mesh(new THREE.CylinderGeometry(.205,.22,.11,16),dark); crown.position.y=1.72; group.add(crown);
-      const brim=new THREE.Mesh(new THREE.BoxGeometry(.28,.035,.13),dark); brim.position.set(0,1.685,.17); group.add(brim);
-      const badge=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.008,12),accent); badge.rotation.x=Math.PI/2; badge.position.set(0,1.72,.225); group.add(badge);
+      // Fitted dome that sits directly on the top half of the head.
+      const dome=new THREE.Mesh(new THREE.SphereGeometry(.205,20,10,0,Math.PI*2,0,Math.PI/2),dark);
+      dome.scale.y=.62; dome.position.set(0,1.675,0); group.add(dome);
+      const brim=new THREE.Mesh(new THREE.BoxGeometry(.28,.035,.14),dark);
+      brim.position.set(0,1.655,.155); brim.rotation.x=-.05; group.add(brim);
+      const badge=new THREE.Mesh(new THREE.CircleGeometry(.035,12),accent);
+      badge.position.set(0,1.68,.202); group.add(badge);
     } else if(id==='visor'){
-      const visor=new THREE.Mesh(new THREE.BoxGeometry(.30,.055,.12),accent); visor.position.set(0,1.55,.18); visor.rotation.x=-.12; group.add(visor);
-      const band=new THREE.Mesh(new THREE.TorusGeometry(.195,.018,6,20,Math.PI),dark); band.rotation.x=Math.PI/2; band.position.set(0,1.55,0); group.add(band);
+      // Small futuristic visor mounted across the front of the head, not above it.
+      const band=new THREE.Mesh(new THREE.BoxGeometry(.31,.055,.045),dark);
+      band.position.set(0,1.565,.175); group.add(band);
+      const lens=new THREE.Mesh(new THREE.BoxGeometry(.285,.075,.035),accent);
+      lens.position.set(0,1.555,.195); lens.rotation.x=-.08; group.add(lens);
     } else if(id==='crown'){
-      const base=new THREE.Mesh(new THREE.CylinderGeometry(.20,.20,.07,12),new THREE.MeshStandardMaterial({color:0xffd700,metalness:.95,roughness:.07})); base.position.y=1.73; group.add(base);
-      const pts=[]; for(let i=0;i<5;i++){ const a=-Math.PI/2+i*Math.PI/4; pts.push(new THREE.Vector3(Math.cos(a)*.19,1.77,Math.sin(a)*.08)); }
-      for(let i=0;i<4;i++){ const a=new THREE.Vector3(-.18+i*.12,1.77,0), b=new THREE.Vector3(-.12+i*.12,1.90,0); const geo=new THREE.CylinderGeometry(.018,.018,a.distanceTo(b),6); const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xffd700,metalness:.96,roughness:.05})); m.position.copy(a.clone().add(b).multiplyScalar(.5)); m.lookAt(b); group.add(m); }
-      const gem=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),new THREE.MeshStandardMaterial({color:0xff2bd6,metalness:.7,roughness:.12,emissive:0x33001e,emissiveIntensity:.5})); gem.position.set(0,1.84,.02); group.add(gem);
+      const base=new THREE.Mesh(new THREE.CylinderGeometry(.20,.205,.055,16),gold);
+      base.position.y=1.715; group.add(base);
+      for(let i=0;i<5;i++){
+        const a=-Math.PI/2 + i*Math.PI/4;
+        const spike=new THREE.Mesh(new THREE.ConeGeometry(.052,.17,4),gold);
+        spike.position.set(Math.cos(a)*.145,1.815,Math.sin(a)*.06);
+        spike.rotation.y=a; group.add(spike);
+      }
+      const gem=new THREE.Mesh(new THREE.SphereGeometry(.032,10,8),new THREE.MeshStandardMaterial({color:0xff2bd6,metalness:.7,roughness:.12,emissive:0x33001e,emissiveIntensity:.5}));
+      gem.position.set(0,1.735,.19); group.add(gem);
     } else if(id==='halo'){
-      const halo=new THREE.Mesh(new THREE.TorusGeometry(.25,.022,8,32),new THREE.MeshStandardMaterial({color:0xffe600,metalness:.9,roughness:.1,emissive:0x443300,emissiveIntensity:.5})); halo.rotation.x=Math.PI/2; halo.position.y=1.78; group.add(halo);
+      // Horizontal ring floating just above the head.
+      const halo=new THREE.Mesh(new THREE.TorusGeometry(.245,.018,8,32),new THREE.MeshStandardMaterial({color:0xffe600,metalness:.9,roughness:.1,emissive:0x443300,emissiveIntensity:.45}));
+      halo.position.y=1.82; group.add(halo);
+      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.07,8),gold); stem.position.y=1.755; group.add(stem);
     } else if(id==='antenna'){
-      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.15,8),accent); stem.position.set(0,1.76,0); group.add(stem);
-      const tip=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),new THREE.MeshStandardMaterial({color:0xff2bd6,emissive:0x66002e,emissiveIntensity:.7})); tip.position.set(0,1.85,0); group.add(tip);
+      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.012,.014,.16,8),accent); stem.position.set(0,1.78,0); group.add(stem);
+      const tip=new THREE.Mesh(new THREE.SphereGeometry(.035,12,8),new THREE.MeshStandardMaterial({color:0xff2bd6,emissive:0x66002e,emissiveIntensity:.75,metalness:.4,roughness:.15}));
+      tip.position.set(0,1.87,0); group.add(tip);
     } else if(id==='headphones'){
-      const band=new THREE.Mesh(new THREE.TorusGeometry(.205,.018,8,24,Math.PI),dark); band.rotation.x=Math.PI/2; band.position.y=1.53; group.add(band);
-      [-1,1].forEach(side=>{ const cup=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.045,12),accent); cup.rotation.z=Math.PI/2; cup.position.set(side*.215,1.53,0); group.add(cup); });
+      // Arch follows the sides/top of the head, with cups centered on the ears.
+      const band=new THREE.Mesh(new THREE.TorusGeometry(.205,.018,8,24,Math.PI),dark);
+      band.position.set(0,1.53,0); group.add(band);
+      [-1,1].forEach(side=>{
+        const cup=new THREE.Mesh(new THREE.CylinderGeometry(.062,.062,.045,16),accent);
+        cup.rotation.z=Math.PI/2; cup.position.set(side*.205,1.53,.015); group.add(cup);
+        const pad=new THREE.Mesh(new THREE.CylinderGeometry(.044,.044,.05,16),dark);
+        pad.rotation.z=Math.PI/2; pad.position.set(side*.218,1.53,.015); group.add(pad);
+      });
     } else if(id==='bowtie'){
-      const m=new THREE.MeshStandardMaterial({color:0xff2bd6,metalness:.35,roughness:.2,emissive:0x250010,emissiveIntensity:.25});
-      [-1,1].forEach(side=>{ const wing=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.025,3),m); wing.rotation.z=side*Math.PI/2; wing.position.set(side*.055,1.04,.13); group.add(wing); });
-      const knot=new THREE.Mesh(new THREE.SphereGeometry(.026,10,8),m); knot.position.set(0,1.04,.145); group.add(knot);
+      // Two clean fabric-like wings centered on the upper torso.
+      const bowMat=new THREE.MeshStandardMaterial({color:0xff2bd6,metalness:.3,roughness:.28,emissive:0x250010,emissiveIntensity:.22});
+      [-1,1].forEach(side=>{
+        const wing=new THREE.Mesh(new THREE.BoxGeometry(.105,.075,.035),bowMat);
+        wing.position.set(side*.065,1.08,.13); wing.rotation.z=side*.35; group.add(wing);
+      });
+      const knot=new THREE.Mesh(new THREE.BoxGeometry(.045,.055,.04),bowMat); knot.position.set(0,1.08,.15); group.add(knot);
     }
   }
   function equipCosmetic(id){ if(!adminMode && ownedCosmetics.indexOf(id)===-1) return; equippedCosmetic=id; try{localStorage.setItem('neonArcade.equippedCosmetic',id)}catch(e){} buildPlayerCosmetic(id); renderCustomizeMenu(); }
@@ -1365,10 +1408,11 @@
   // The passphrase works on any computer; localStorage is only used to keep
   // the unlocked state on that computer.
   // ---------------------------------------------------------------------
-  const ADMIN_CODE_HASH='ec8d2cb6bff9ee7d24f9c9d91576c3e290668b582435dfc378be821cf0d5b217';
+  const ADMIN_CODE_HASH='ac2e0b4e3cea7d35ddde40cf69afbd45bd8534831bccebf72ea95345fdb2a524';
   const adminOverlay=document.getElementById('admin-overlay');
-  const adminCode=document.getElementById('admin-code');
+  const adminPinDisplay=document.getElementById('admin-pin-display');
   const adminStatus=document.getElementById('admin-status');
+  let adminPin='';
   function setAdminMode(on){
     adminMode=!!on;
     if(!adminMode){
@@ -1381,16 +1425,58 @@
     renderCustomizeMenu();
     try{localStorage.setItem('neonArcade.admin',''+(adminMode?1:0));}catch(e){}
   }
-  function openAdmin(){ if(gameOpen||cameraAnimating) return; closeMenus(); adminOverlay.style.display='flex'; adminCode.value=''; setTimeout(()=>adminCode.focus(),50); }
-  async function unlockAdmin(){
-    const value=adminCode.value; if(!value) return;
-    const data=new TextEncoder().encode(value); const digest=await crypto.subtle.digest('SHA-256',data); const hash=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    if(hash===ADMIN_CODE_HASH){setAdminMode(true);adminOverlay.style.display='none';AudioEngine.click();}
-    else{adminCode.value='';adminCode.placeholder='ACCESS DENIED';adminCode.focus();}
+  function updateAdminPinDisplay(error=false){
+    adminPinDisplay.textContent=adminPin ? '•'.repeat(adminPin.length) : '••••';
+    adminPinDisplay.classList.toggle('error',!!error);
   }
-  document.getElementById('admin-login-btn').addEventListener('click',unlockAdmin);
-  document.getElementById('admin-cancel-btn').addEventListener('click',()=>adminOverlay.style.display='none');
-  adminCode.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();unlockAdmin();} if(e.key==='Escape') adminOverlay.style.display='none';});
+  function openAdmin(){
+    if(gameOpen||cameraAnimating) return;
+    closeMenus(); adminPin=''; updateAdminPinDisplay(); adminOverlay.style.display='flex';
+  }
+
+  // Mobile-friendly hidden entry: press and hold the ticket counter for 1.6s.
+  // This mirrors the desktop shortcut without adding an obvious admin button.
+  let adminHoldTimer=null;
+  let adminHoldTriggered=false;
+  function startAdminHold(e){
+    if(e && e.pointerType && e.pointerType!=='touch') return;
+    adminHoldTriggered=false;
+    clearTimeout(adminHoldTimer);
+    adminHoldTimer=setTimeout(()=>{
+      adminHoldTriggered=true;
+      openAdmin();
+      AudioEngine.click();
+    },1600);
+  }
+  function endAdminHold(){ clearTimeout(adminHoldTimer); adminHoldTimer=null; }
+  const ticketCounter=document.getElementById('ticket-display');
+  ticketCounter.addEventListener('pointerdown',startAdminHold);
+  ticketCounter.addEventListener('pointerup',endAdminHold);
+  ticketCounter.addEventListener('pointercancel',endAdminHold);
+  ticketCounter.addEventListener('pointerleave',endAdminHold);
+  async function unlockAdmin(){
+    if(adminPin.length!==4) return;
+    const data=new TextEncoder().encode(adminPin); const digest=await crypto.subtle.digest('SHA-256',data); const hash=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(hash===ADMIN_CODE_HASH){setAdminMode(true);adminOverlay.style.display='none';adminPin='';AudioEngine.click();}
+    else{adminPin='';updateAdminPinDisplay(true);AudioEngine.error();setTimeout(()=>updateAdminPinDisplay(),650);}
+  }
+  document.querySelectorAll('#admin-pad button[data-pin]').forEach(btn=>{
+    btn.addEventListener('pointerdown',()=>{
+      document.querySelectorAll('#admin-pad button[data-pin]').forEach(b=>b.classList.remove('lit'));
+      btn.classList.add('lit');
+      clearTimeout(btn._litTimer);
+      btn._litTimer=setTimeout(()=>btn.classList.remove('lit'),180);
+    });
+    btn.addEventListener('click',()=>{
+    const key=btn.dataset.pin; AudioEngine.click();
+    if(key==='clear'){adminPin='';updateAdminPinDisplay();return;}
+    if(key==='enter'){unlockAdmin();return;}
+    if(adminPin.length<4){adminPin+=key;updateAdminPinDisplay();}
+    if(adminPin.length===4) setTimeout(unlockAdmin,120);
+    });
+  });
+  document.getElementById('admin-cancel-btn').addEventListener('click',()=>{adminPin='';adminOverlay.style.display='none';});
+  adminOverlay.addEventListener('keydown',e=>{if(e.key==='Escape'){adminPin='';adminOverlay.style.display='none';}});
   try{ if(localStorage.getItem('neonArcade.admin')==='1') setAdminMode(true); }catch(e){}
 
   const leaderboardBtn = document.getElementById('leaderboard-btn');
