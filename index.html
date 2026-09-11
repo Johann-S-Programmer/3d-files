@@ -348,27 +348,40 @@
     background:rgba(2,2,4,.9);
   }
   #settings-overlay .panel{
-    background:#0a0612; border:2px solid var(--magenta); box-shadow:0 0 30px rgba(255,43,214,.4);
-    padding:24px; max-width:460px; width:90vw; max-height:85vh; overflow-y:auto;
+    background:linear-gradient(180deg,#10071b,#08050d); border:2px solid var(--magenta);
+    box-shadow:0 0 30px rgba(255,43,214,.35), inset 0 0 24px rgba(34,224,255,.04);
+    padding:18px; max-width:620px; width:94vw; max-height:88vh; overflow-y:auto;
   }
-  #settings-overlay h2{ margin:0 0 16px; color:var(--cyan); font-size:.75rem; text-align:center; text-shadow:0 0 8px var(--cyan); }
-  .settings-section-title{
-    color:#8a7fb0; font-size:.4rem; text-align:center; margin:10px 0 8px;
-    letter-spacing:.08em;
-  }
-  #mini-preview{ width:120px; height:140px; margin:0 auto 8px; }
+  #settings-overlay h2{ margin:0 0 14px; color:var(--cyan); font-size:.75rem; text-align:center; text-shadow:0 0 8px var(--cyan); }
+  .settings-section-title{ color:#8a7fb0; font-size:.38rem; text-align:left; margin:12px 2px 7px; letter-spacing:.1em; }
+  .inventory-layout{ display:grid; grid-template-columns:150px 1fr; gap:14px; align-items:start; }
+  .inventory-preview{ background:#08040e; border:2px solid #3a2860; border-radius:6px; padding:8px; position:sticky; top:0; }
+  .inventory-preview-label{ text-align:center; color:#8a7fb0; font-size:.32rem; margin-top:2px; }
+  #mini-preview{ width:120px; height:140px; margin:0 auto; }
   #mini-preview canvas{ display:block; }
-  #customize-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
-  .skin-swatch{
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    background:#140a24; border:2px solid #3a2860; border-radius:6px; padding:10px 6px;
-    font-family:'Press Start 2P', monospace; font-size:.4rem; color:#eae6ff; cursor:pointer;
-  }
-  .skin-swatch:disabled{ opacity:.4; cursor:not-allowed; }
-  .skin-swatch.equipped{ border-color:var(--phosphor); box-shadow:0 0 10px rgba(57,255,20,.4); }
-  .swatch-dot{ width:26px; height:26px; border-radius:50%; background:var(--swatch-color); border:2px solid #000; }
-  .swatch-sub{ color:#8a7fb0; font-size:.34rem; }
-  .volume-row{ display:flex; align-items:center; justify-content:center; gap:12px; padding:20px 0; }
+  .inventory-main{ min-width:0; }
+  .inventory-tabs{ display:flex; gap:6px; margin-bottom:9px; }
+  .inventory-tab{ flex:1; padding:9px 5px; font: .36rem 'Press Start 2P',monospace; color:#8a7fb0; background:#140a24; border:2px solid #3a2860; border-radius:4px; cursor:pointer; }
+  .inventory-tab.active{ color:#050505; background:var(--cyan); border-color:var(--cyan); box-shadow:0 0 10px rgba(34,224,255,.35); }
+  #customize-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+  .inventory-item{ min-height:112px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    background:#12081f; border:2px solid #3a2860; border-radius:5px; padding:9px 5px;
+    font-family:'Press Start 2P',monospace; font-size:.36rem; color:#eae6ff; cursor:pointer; position:relative; }
+  .inventory-item:hover:not(:disabled){ border-color:var(--cyan); transform:translateY(-1px); }
+  .inventory-item:disabled{ opacity:.42; cursor:not-allowed; }
+  .inventory-item.equipped{ border-color:var(--phosphor); box-shadow:0 0 10px rgba(57,255,20,.3), inset 0 0 12px rgba(57,255,20,.05); }
+  .inventory-item.equipped::after{ content:'EQUIPPED'; position:absolute; top:4px; right:4px; color:var(--phosphor); font-size:.25rem; }
+  .inventory-icon{ width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:5px; background:#08040d; border:1px solid #3a2860; box-shadow:inset 0 0 12px rgba(255,255,255,.03); font-size:1.35rem; }
+  .swatch-dot{ width:38px; height:38px; border-radius:50%; background:var(--swatch-color); border:2px solid #000; box-shadow:inset -5px -6px 8px rgba(0,0,0,.28),0 0 8px rgba(255,255,255,.05); }
+  .swatch-sub{ color:#8a7fb0; font-size:.27rem; text-align:center; line-height:1.4; }
+  .inventory-empty{ grid-column:1/-1; text-align:center; padding:26px 8px; color:#6f668c; font:10px monospace; }
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 10px; margin-top:8px; background:#10071a; border:1px solid #3a2860; border-radius:5px; }
+  .settings-row-label{ color:#eae6ff; font-size:.36rem; line-height:1.5; }
+  .settings-row-sub{ display:block; color:#6f668c; font:10px monospace; margin-top:3px; }
+  .toggle-btn{ min-width:68px; padding:8px 7px; font: .34rem 'Press Start 2P',monospace; color:#050505; background:var(--phosphor); border:0; border-radius:3px; cursor:pointer; }
+  .toggle-btn.off{ color:#aaa; background:#29232f; border:1px solid #4b4058; }
+  .volume-row{ display:flex; align-items:center; justify-content:center; gap:12px; padding:12px 0 4px; }
+  @media(max-width:560px){ #settings-overlay .panel{padding:14px;} .inventory-layout{grid-template-columns:1fr;} .inventory-preview{position:relative;} #customize-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
   #mute-btn{
     font-family:'Press Start 2P', monospace; font-size:1rem; color:var(--cyan);
     background:none; border:none; cursor:pointer; line-height:1;
@@ -429,13 +442,28 @@
 <div id="settings-overlay">
   <div class="panel">
     <h2>SETTINGS</h2>
-    <div class="settings-section-title">PLAYER</div>
-    <div id="mini-preview"></div>
-    <div id="customize-grid"></div>
-    <div class="settings-section-title">VOLUME</div>
+    <div class="inventory-layout">
+      <div class="inventory-preview">
+        <div id="mini-preview"></div>
+        <div class="inventory-preview-label">CURRENT LOADOUT</div>
+      </div>
+      <div class="inventory-main">
+        <div class="inventory-tabs">
+          <button class="inventory-tab active" data-tab="suits">SUITS</button>
+          <button class="inventory-tab" data-tab="accessories">ACCESSORIES</button>
+        </div>
+        <div id="customize-grid"></div>
+      </div>
+    </div>
+    <div class="settings-section-title">AUDIO</div>
     <div class="volume-row">
       <button id="mute-btn">&#128266;</button>
       <input type="range" id="volume-slider" min="0" max="100" value="55">
+    </div>
+    <div class="settings-section-title">ADVANCED</div>
+    <div class="settings-row">
+      <div class="settings-row-label">DEVELOPER CONTROLS<span class="settings-row-sub">Hidden operator shortcuts &amp; mobile access</span></div>
+      <button id="dev-controls-toggle" class="toggle-btn">ON</button>
     </div>
     <div class="admin-status" id="admin-status">ADMIN MODE: OFF</div>
     <button id="settings-close-btn">CLOSE</button>
@@ -1346,25 +1374,40 @@
   applySkin(equippedSkin);
   buildPlayerCosmetic(equippedCosmetic);
 
+  let inventoryTab='suits';
+  const inventoryTabs=document.querySelectorAll('.inventory-tab');
+  inventoryTabs.forEach(tab=>tab.addEventListener('click',()=>{
+    inventoryTab=tab.dataset.tab;
+    inventoryTabs.forEach(t=>t.classList.toggle('active',t===tab));
+    renderCustomizeMenu();
+    AudioEngine.click();
+  }));
+
   function renderCustomizeMenu(){
     customizeGrid.innerHTML = '';
-    const heading=document.createElement('div'); heading.className='settings-section-title'; heading.textContent='SUITS'; customizeGrid.appendChild(heading);
-    SKIN_OPTIONS.forEach(skin => {
-      const owned = adminMode || ownedSkins.indexOf(skin.id) !== -1; const equipped = equippedSkin === skin.id;
-      const swatch=document.createElement('button'); swatch.className='skin-swatch'+(equipped?' equipped':'');
-      swatch.style.setProperty('--swatch-color','#'+skin.color.toString(16).padStart(6,'0'));
-      swatch.innerHTML=`<span class="swatch-dot"></span><span>${skin.name}</span><span class="swatch-sub">${equipped?'EQUIPPED':owned?'TAP TO WEAR':('🎟 '+skin.cost)}</span>`;
-      swatch.disabled=!owned&&!adminMode&&tickets<skin.cost;
-      swatch.addEventListener('click',()=>{AudioEngine.click();owned?equipSkin(skin.id):buySkin(skin.id)}); customizeGrid.appendChild(swatch);
-    });
-    const ctitle=document.createElement('div'); ctitle.className='settings-section-title'; ctitle.textContent='ACCESSORIES'; customizeGrid.appendChild(ctitle);
-    COSMETIC_OPTIONS.forEach(c => {
-      const owned=adminMode||ownedCosmetics.indexOf(c.id)!==-1; const equipped=equippedCosmetic===c.id;
-      const b=document.createElement('button'); b.className='skin-swatch'+(equipped?' equipped':'');
+    if(inventoryTab==='suits'){
+      SKIN_OPTIONS.forEach(skin => {
+        const owned = adminMode || ownedSkins.indexOf(skin.id) !== -1;
+        const equipped = equippedSkin === skin.id;
+        const item=document.createElement('button'); item.className='inventory-item'+(equipped?' equipped':'');
+        item.style.setProperty('--swatch-color','#'+skin.color.toString(16).padStart(6,'0'));
+        item.innerHTML=`<span class="inventory-icon"><span class="swatch-dot"></span></span><span>${skin.name}</span><span class="swatch-sub">${equipped?'EQUIPPED':owned?'TAP TO WEAR':('🎟 '+skin.cost)}</span>`;
+        item.disabled=!owned&&tickets<skin.cost;
+        item.addEventListener('click',()=>{AudioEngine.click();owned?equipSkin(skin.id):buySkin(skin.id)});
+        customizeGrid.appendChild(item);
+      });
+    } else {
       const colors={none:'#666',cap:'#b060e0',visor:'#22e0ff',crown:'#ffd700',halo:'#ffe600',antenna:'#ff2bd6',headphones:'#39ff14',bowtie:'#ff2bd6'};
-      b.style.setProperty('--swatch-color',colors[c.id]||'#aaa'); b.innerHTML=`<span class="cosmetic-icon">${({none:'○',cap:'⌒',visor:'▰',crown:'♛',halo:'◯',antenna:'⌁',headphones:'◉',bowtie:'◆'})[c.id]}</span><span>${c.name}</span><span class="swatch-sub">${equipped?'EQUIPPED':owned?'TAP TO WEAR':('🎟 '+c.cost)}</span>`;
-      b.disabled=!owned&&!adminMode&&tickets<c.cost; b.addEventListener('click',()=>{AudioEngine.click();owned?equipCosmetic(c.id):buyCosmetic(c.id)}); customizeGrid.appendChild(b);
-    });
+      const icons={none:'○',cap:'⌒',visor:'▰',crown:'♛',halo:'◯',antenna:'⌁',headphones:'◉',bowtie:'◆'};
+      COSMETIC_OPTIONS.forEach(c => {
+        const owned=adminMode||ownedCosmetics.indexOf(c.id)!==-1; const equipped=equippedCosmetic===c.id;
+        const item=document.createElement('button'); item.className='inventory-item'+(equipped?' equipped':'');
+        item.innerHTML=`<span class="inventory-icon" style="color:${colors[c.id]||'#aaa'};text-shadow:0 0 9px ${colors[c.id]||'#aaa'}">${icons[c.id]||'◆'}</span><span>${c.name}</span><span class="swatch-sub">${equipped?'EQUIPPED':owned?'TAP TO WEAR':('🎟 '+c.cost)}</span>`;
+        item.disabled=!owned&&tickets<c.cost;
+        item.addEventListener('click',()=>{AudioEngine.click();owned?equipCosmetic(c.id):buyCosmetic(c.id)});
+        customizeGrid.appendChild(item);
+      });
+    }
   }
   settingsBtn.addEventListener('click', () => {
     renderCustomizeMenu();
@@ -1409,6 +1452,30 @@
   // the unlocked state on that computer.
   // ---------------------------------------------------------------------
   const ADMIN_CODE_HASH='ac2e0b4e3cea7d35ddde40cf69afbd45bd8534831bccebf72ea95345fdb2a524';
+  let devControlsEnabled=true;
+  try{ devControlsEnabled=localStorage.getItem('neonArcade.devControls')!=='0'; }catch(e){}
+  const devControlsToggle=document.getElementById('dev-controls-toggle');
+  function refreshDevControlsUI(){
+    devControlsToggle.textContent=devControlsEnabled?'ON':'OFF';
+    devControlsToggle.classList.toggle('off',!devControlsEnabled);
+  }
+  devControlsToggle.addEventListener('click',()=>{
+    // Settings can only DISABLE developer controls. Re-enabling them always
+    // requires the hidden PIN pad so the toggle itself cannot bypass the PIN.
+    if(!devControlsEnabled){
+      devControlsToggle.classList.add('locked');
+      devControlsToggle.textContent='PIN REQUIRED';
+      setTimeout(refreshDevControlsUI,700);
+      AudioEngine.error();
+      return;
+    }
+    devControlsEnabled=false;
+    try{localStorage.setItem('neonArcade.devControls','0');}catch(e){}
+    // Turning controls off also ends the active admin session.
+    if(adminMode) setAdminMode(false);
+    refreshDevControlsUI(); AudioEngine.click();
+  });
+  refreshDevControlsUI();
   const adminOverlay=document.getElementById('admin-overlay');
   const adminPinDisplay=document.getElementById('admin-pin-display');
   const adminStatus=document.getElementById('admin-status');
@@ -1439,6 +1506,8 @@
   let adminHoldTimer=null;
   let adminHoldTriggered=false;
   function startAdminHold(e){
+    // The hidden PIN entry remains available even when developer controls are
+    // disabled; the PIN is the only way to turn them back on.
     if(e && e.pointerType && e.pointerType!=='touch') return;
     adminHoldTriggered=false;
     clearTimeout(adminHoldTimer);
@@ -1457,7 +1526,15 @@
   async function unlockAdmin(){
     if(adminPin.length!==4) return;
     const data=new TextEncoder().encode(adminPin); const digest=await crypto.subtle.digest('SHA-256',data); const hash=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    if(hash===ADMIN_CODE_HASH){setAdminMode(true);adminOverlay.style.display='none';adminPin='';AudioEngine.click();}
+    if(hash===ADMIN_CODE_HASH){
+      devControlsEnabled=true;
+      try{localStorage.setItem('neonArcade.devControls','1');}catch(e){}
+      refreshDevControlsUI();
+      setAdminMode(true);
+      adminOverlay.style.display='none';
+      adminPin='';
+      AudioEngine.click();
+    }
     else{adminPin='';updateAdminPinDisplay(true);AudioEngine.error();setTimeout(()=>updateAdminPinDisplay(),650);}
   }
   document.querySelectorAll('#admin-pad button[data-pin]').forEach(btn=>{
