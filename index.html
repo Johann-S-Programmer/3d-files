@@ -309,6 +309,33 @@
     display:block; margin:0 auto; font-family:'Press Start 2P', monospace; font-size:.5rem;
     padding:10px 18px; background:#ffe600; color:#050505; border:none; border-radius:4px; cursor:pointer;
   }
+  #feedback-btn{top:106px;color:#ff8a20;border:2px solid #ff8a20;}
+  body.game-playing #feedback-btn{top:152px;}
+  body.game-playing #feedback-btn{opacity:.22;}
+  body.game-playing #feedback-btn:hover{opacity:1;}
+  #feedback-overlay{position:fixed;inset:0;z-index:65;display:none;align-items:center;justify-content:center;background:rgba(2,2,4,.92);}
+  #feedback-overlay .panel{background:#0a0612;border:2px solid #ff8a20;box-shadow:0 0 30px rgba(255,138,32,.35);padding:24px;max-width:520px;width:92vw;max-height:88vh;overflow:auto;}
+  #feedback-overlay h2{margin:0 0 6px;color:#ff8a20;font-size:.75rem;text-align:center;text-shadow:0 0 8px #ff8a20;}
+  #feedback-overlay .sub{text-align:center;color:#8a7fb0;font-size:.4rem;margin-bottom:16px;}
+  #feedback-form label{display:block;color:#8a7fb0;font-family:'Press Start 2P',monospace;font-size:.38rem;margin:12px 0;}
+  #feedback-form input,#feedback-form select,#feedback-form textarea{display:block;width:100%;margin-top:7px;padding:10px;background:#140a24;color:#eae6ff;border:2px solid #3a2860;border-radius:4px;font:inherit;outline:none;}
+  #feedback-form textarea{resize:vertical;min-height:110px;line-height:1.5;}
+  #feedback-form input:focus,#feedback-form select:focus,#feedback-form textarea:focus{border-color:#ff8a20;}
+  .feedback-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;}
+  .feedback-actions button{font-family:'Press Start 2P',monospace;font-size:.42rem;padding:10px 14px;border:0;border-radius:4px;cursor:pointer;}
+  #feedback-submit{background:#ff8a20;color:#050505;} #feedback-close-btn{background:#3a2860;color:#eae6ff;}
+  .feedback-note{margin-top:12px;color:#6f668c;font:10px/1.5 monospace;text-align:center;}
+  .admin-status{margin:14px auto 0;text-align:center;font:10px monospace;letter-spacing:.08em;color:#6f668c;}
+  .admin-status.on{color:#39ff14;text-shadow:0 0 8px #39ff14;}
+  #admin-overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.94);}
+  #admin-overlay .panel{background:#080808;border:2px solid #39ff14;box-shadow:0 0 28px rgba(57,255,20,.22);padding:24px;width:min(400px,90vw);}
+  #admin-overlay h2{margin:0 0 8px;color:#39ff14;font:14px 'Press Start 2P',monospace;text-align:center;}
+  #admin-overlay p{color:#777;text-align:center;font:11px monospace;line-height:1.5;}
+  #admin-code{width:100%;box-sizing:border-box;background:#020402;color:#39ff14;border:1px solid #245d24;padding:11px;font:14px monospace;outline:none;text-align:center;}
+  #admin-code:focus{border-color:#39ff14;}
+  #admin-actions{display:flex;gap:8px;justify-content:center;margin-top:14px;}
+  #admin-actions button{font:10px 'Press Start 2P',monospace;padding:9px 12px;border:0;border-radius:3px;cursor:pointer;}
+  #admin-login-btn{background:#39ff14;color:#000;} #admin-cancel-btn{background:#222;color:#aaa;}
   #settings-overlay{
     position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     background:rgba(2,2,4,.9);
@@ -390,6 +417,7 @@
 <div id="ticket-display">&#127883; 0</div>
 <button id="settings-btn">&#9881; SETTINGS</button>
 <button id="leaderboard-btn">&#127942; STATS</button>
+<button id="feedback-btn">&#128172; FEEDBACK</button>
 
 <div id="settings-overlay">
   <div class="panel">
@@ -402,7 +430,33 @@
       <button id="mute-btn">&#128266;</button>
       <input type="range" id="volume-slider" min="0" max="100" value="55">
     </div>
+    <div class="admin-status" id="admin-status">ADMIN MODE: OFF</div>
     <button id="settings-close-btn">CLOSE</button>
+  </div>
+</div>
+
+<div id="feedback-overlay">
+  <div class="panel">
+    <h2>ARCADE FEEDBACK</h2>
+    <div class="sub">HELP IMPROVE THE CABINET</div>
+    <form id="feedback-form">
+      <label>TYPE<select id="feedback-type">
+        <option>Bug report</option><option>Game request</option><option>Cosmetic idea</option><option>Room / UI idea</option><option>Other</option>
+      </select></label>
+      <label>MESSAGE<textarea id="feedback-message" rows="6" maxlength="2000" placeholder="Tell me what you noticed..."></textarea></label>
+      <label>CONTACT (OPTIONAL)<input id="feedback-contact" maxlength="120" placeholder="email or Discord"></label>
+      <div class="feedback-actions"><button type="submit" id="feedback-submit">SEND FEEDBACK</button><button type="button" id="feedback-close-btn">CANCEL</button></div>
+      <div class="feedback-note" id="feedback-note">Feedback is prepared in your browser. To receive submissions automatically, connect a form endpoint in the source.</div>
+    </form>
+  </div>
+</div>
+
+<div id="admin-overlay">
+  <div class="panel">
+    <h2>OPERATOR ACCESS</h2>
+    <p>Restricted cabinet controls.<br>Enter the operator code to continue.</p>
+    <input id="admin-code" type="password" autocomplete="off" spellcheck="false" aria-label="operator code">
+    <div id="admin-actions"><button id="admin-login-btn">UNLOCK</button><button id="admin-cancel-btn">CANCEL</button></div>
   </div>
 </div>
 
@@ -696,6 +750,10 @@
   controls.dampingFactor = 0.08;
   controls.enablePan = false;
   controls.enableZoom = true;
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+  controls.mouseButtons.RIGHT = THREE.MOUSE.DOLLY;
+  controls.touches.ONE = THREE.TOUCH.ROTATE;
+  controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
   controls.minDistance = 1.05;
   controls.maxDistance = 6.0;
   controls.minPolarAngle = Math.PI / 2 - 0.95; // was -0.48: too tight to look up far enough to see the marquee up close
@@ -1058,24 +1116,42 @@
   // Tickets + character customization
   // =====================================================================
   const SKIN_OPTIONS = [
-    { id:'grey',    name:'CLASSIC', color:0xd0d0d0, cost:0  },
-    { id:'cyan',    name:'CYAN',    color:0x22e0ff, cost:10 },
-    { id:'magenta', name:'MAGENTA', color:0xff2bd6, cost:10 },
-    { id:'yellow',  name:'YELLOW',  color:0xffe600, cost:15 },
-    { id:'green',   name:'NEON',    color:0x39ff14, cost:15 },
-    { id:'orange',  name:'ORANGE',  color:0xff8020, cost:20 },
-    { id:'purple',  name:'PURPLE',  color:0xb060e0, cost:25 },
-    { id:'gold',    name:'GOLD',    color:0xffd700, cost:50 },
+    { id:'grey',    name:'CLASSIC', color:0xd0d0d0, cost:0,  metalness:.05, roughness:.82 },
+    { id:'cyan',    name:'CYAN',    color:0x22e0ff, cost:10, metalness:.25, roughness:.34, emissive:0x062d38, emissiveIntensity:.12 },
+    { id:'magenta', name:'MAGENTA', color:0xff2bd6, cost:10, metalness:.2, roughness:.36, emissive:0x3b062d, emissiveIntensity:.14 },
+    { id:'yellow',  name:'YELLOW',  color:0xffe600, cost:15, metalness:.15, roughness:.38 },
+    { id:'green',   name:'NEON',    color:0x39ff14, cost:15, metalness:.18, roughness:.34, emissive:0x082b04, emissiveIntensity:.14 },
+    { id:'orange',  name:'ORANGE',  color:0xff8020, cost:20, metalness:.18, roughness:.38 },
+    { id:'purple',  name:'PURPLE',  color:0xb060e0, cost:25, metalness:.28, roughness:.32 },
+    { id:'gold',    name:'GOLD',    color:0xffd700, cost:50, metalness:.94, roughness:.08, emissive:0x6b3900, emissiveIntensity:.13 },
+    { id:'silver',  name:'SILVER',  color:0xe8edf2, cost:35, metalness:.92, roughness:.12 },
+    { id:'ruby',    name:'RUBY',    color:0xd4143a, cost:40, metalness:.72, roughness:.18, emissive:0x330006, emissiveIntensity:.12 },
+    { id:'ice',     name:'ICE',     color:0xb9f6ff, cost:45, metalness:.52, roughness:.14, emissive:0x16434a, emissiveIntensity:.15 },
+    { id:'void',    name:'VOID',    color:0x17131f, cost:60, metalness:.8, roughness:.2, emissive:0x050008, emissiveIntensity:.25 },
+  ];
+  const COSMETIC_OPTIONS = [
+    {id:'none', name:'NONE', cost:0}, {id:'cap', name:'CAP', cost:12}, {id:'visor', name:'VISOR', cost:18},
+    {id:'crown', name:'CROWN', cost:75}, {id:'halo', name:'HALO', cost:65}, {id:'antenna', name:'ANTENNA', cost:22},
+    {id:'headphones', name:'HEADPHONES', cost:30}, {id:'bowtie', name:'BOW TIE', cost:16}
   ];
   let tickets = 0, ownedSkins = ['grey'], equippedSkin = 'grey';
+  let ownedCosmetics = ['none'], equippedCosmetic = 'none';
+  let adminMode = false;
   try { tickets = parseInt(localStorage.getItem('neonArcade.tickets'), 10) || 0; } catch(e){}
   try { ownedSkins = JSON.parse(localStorage.getItem('neonArcade.ownedSkins') || '["grey"]'); } catch(e){}
   try { equippedSkin = localStorage.getItem('neonArcade.equippedSkin') || 'grey'; } catch(e){}
   if (!Array.isArray(ownedSkins) || ownedSkins.indexOf('grey') === -1) ownedSkins = ['grey'];
+  try { ownedCosmetics = JSON.parse(localStorage.getItem('neonArcade.ownedCosmetics') || '["none"]'); } catch(e){}
+  try { equippedCosmetic = localStorage.getItem('neonArcade.equippedCosmetic') || 'none'; } catch(e){}
+  if (!Array.isArray(ownedCosmetics) || ownedCosmetics.indexOf('none') === -1) ownedCosmetics = ['none'];
+
+  const playerCosmeticGroup = new THREE.Group();
+  player.add(playerCosmeticGroup);
 
   const ticketDisplay = document.getElementById('ticket-display');
-  function refreshTicketDisplay(){ ticketDisplay.innerHTML = '&#127883; ' + tickets; }
+  function refreshTicketDisplay(){ ticketDisplay.innerHTML = '&#127883; ' + (adminMode ? '&infin;' : tickets); }
   function addTickets(n){
+    if (adminMode) { refreshTicketDisplay(); return; }
     tickets = Math.max(0, tickets + n);
     try { localStorage.setItem('neonArcade.tickets', String(tickets)); } catch(e){}
     refreshTicketDisplay();
@@ -1084,7 +1160,11 @@
   function applySkin(id){
     const skin = SKIN_OPTIONS.find(s => s.id === id) || SKIN_OPTIONS[0];
     playerMat.color.set(skin.color);
-    if (typeof miniPreview !== 'undefined') miniPreview.setColor(skin.color);
+    playerMat.metalness = skin.metalness ?? 0.05;
+    playerMat.roughness = skin.roughness ?? 0.8;
+    playerMat.emissive.set(skin.emissive || 0x000000);
+    playerMat.emissiveIntensity = skin.emissiveIntensity || 0;
+    if (typeof miniPreview !== 'undefined') miniPreview.setMaterial(skin);
   }
   function equipSkin(id){
     if (ownedSkins.indexOf(id) === -1) return;
@@ -1095,12 +1175,53 @@
   }
   function buySkin(id){
     const skin = SKIN_OPTIONS.find(s => s.id === id);
-    if (!skin || ownedSkins.indexOf(id) !== -1 || tickets < skin.cost) return;
-    addTickets(-skin.cost);
+    if (!skin || ownedSkins.indexOf(id) !== -1 || (!adminMode && tickets < skin.cost)) return;
+    if (!adminMode) addTickets(-skin.cost);
     ownedSkins.push(id);
     try { localStorage.setItem('neonArcade.ownedSkins', JSON.stringify(ownedSkins)); } catch(e){}
     equipSkin(id);
   }
+  function clearCosmetics(){
+    while(playerCosmeticGroup.children.length){
+      const o=playerCosmeticGroup.children.pop();
+      o.traverse?.(n=>{ if(n.geometry) n.geometry.dispose(); if(n.material) n.material.dispose(); });
+    }
+  }
+  function buildPlayerCosmetic(id){
+    clearCosmetics();
+    if(id==='none') return;
+    const group=playerCosmeticGroup;
+    const dark=new THREE.MeshStandardMaterial({color:0x101018,metalness:.65,roughness:.22});
+    const accent=new THREE.MeshStandardMaterial({color:0x22e0ff,metalness:.55,roughness:.16,emissive:0x05242a,emissiveIntensity:.25});
+    if(id==='cap'){
+      const crown=new THREE.Mesh(new THREE.CylinderGeometry(.205,.22,.11,16),dark); crown.position.y=1.72; group.add(crown);
+      const brim=new THREE.Mesh(new THREE.BoxGeometry(.28,.035,.13),dark); brim.position.set(0,1.685,.17); group.add(brim);
+      const badge=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.008,12),accent); badge.rotation.x=Math.PI/2; badge.position.set(0,1.72,.225); group.add(badge);
+    } else if(id==='visor'){
+      const visor=new THREE.Mesh(new THREE.BoxGeometry(.30,.055,.12),accent); visor.position.set(0,1.55,.18); visor.rotation.x=-.12; group.add(visor);
+      const band=new THREE.Mesh(new THREE.TorusGeometry(.195,.018,6,20,Math.PI),dark); band.rotation.x=Math.PI/2; band.position.set(0,1.55,0); group.add(band);
+    } else if(id==='crown'){
+      const base=new THREE.Mesh(new THREE.CylinderGeometry(.20,.20,.07,12),new THREE.MeshStandardMaterial({color:0xffd700,metalness:.95,roughness:.07})); base.position.y=1.73; group.add(base);
+      const pts=[]; for(let i=0;i<5;i++){ const a=-Math.PI/2+i*Math.PI/4; pts.push(new THREE.Vector3(Math.cos(a)*.19,1.77,Math.sin(a)*.08)); }
+      for(let i=0;i<4;i++){ const a=new THREE.Vector3(-.18+i*.12,1.77,0), b=new THREE.Vector3(-.12+i*.12,1.90,0); const geo=new THREE.CylinderGeometry(.018,.018,a.distanceTo(b),6); const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xffd700,metalness:.96,roughness:.05})); m.position.copy(a.clone().add(b).multiplyScalar(.5)); m.lookAt(b); group.add(m); }
+      const gem=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),new THREE.MeshStandardMaterial({color:0xff2bd6,metalness:.7,roughness:.12,emissive:0x33001e,emissiveIntensity:.5})); gem.position.set(0,1.84,.02); group.add(gem);
+    } else if(id==='halo'){
+      const halo=new THREE.Mesh(new THREE.TorusGeometry(.25,.022,8,32),new THREE.MeshStandardMaterial({color:0xffe600,metalness:.9,roughness:.1,emissive:0x443300,emissiveIntensity:.5})); halo.rotation.x=Math.PI/2; halo.position.y=1.78; group.add(halo);
+    } else if(id==='antenna'){
+      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.15,8),accent); stem.position.set(0,1.76,0); group.add(stem);
+      const tip=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),new THREE.MeshStandardMaterial({color:0xff2bd6,emissive:0x66002e,emissiveIntensity:.7})); tip.position.set(0,1.85,0); group.add(tip);
+    } else if(id==='headphones'){
+      const band=new THREE.Mesh(new THREE.TorusGeometry(.205,.018,8,24,Math.PI),dark); band.rotation.x=Math.PI/2; band.position.y=1.53; group.add(band);
+      [-1,1].forEach(side=>{ const cup=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.045,12),accent); cup.rotation.z=Math.PI/2; cup.position.set(side*.215,1.53,0); group.add(cup); });
+    } else if(id==='bowtie'){
+      const m=new THREE.MeshStandardMaterial({color:0xff2bd6,metalness:.35,roughness:.2,emissive:0x250010,emissiveIntensity:.25});
+      [-1,1].forEach(side=>{ const wing=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.025,3),m); wing.rotation.z=side*Math.PI/2; wing.position.set(side*.055,1.04,.13); group.add(wing); });
+      const knot=new THREE.Mesh(new THREE.SphereGeometry(.026,10,8),m); knot.position.set(0,1.04,.145); group.add(knot);
+    }
+  }
+  function equipCosmetic(id){ if(ownedCosmetics.indexOf(id)===-1) return; equippedCosmetic=id; try{localStorage.setItem('neonArcade.equippedCosmetic',id)}catch(e){} buildPlayerCosmetic(id); renderCustomizeMenu(); }
+  function buyCosmetic(id){ const c=COSMETIC_OPTIONS.find(x=>x.id===id); if(!c||ownedCosmetics.includes(id)||(!adminMode&&tickets<c.cost)) return; if(!adminMode) addTickets(-c.cost); ownedCosmetics.push(id); try{localStorage.setItem('neonArcade.ownedCosmetics',JSON.stringify(ownedCosmetics))}catch(e){} equipCosmetic(id); }
+
   playerMat.color.set((SKIN_OPTIONS.find(s => s.id === equippedSkin) || SKIN_OPTIONS[0]).color);
   refreshTicketDisplay();
 
@@ -1176,21 +1297,30 @@
 
     function loop(){ requestAnimationFrame(loop); grp.rotation.y += 0.015; r2.render(s2, c2); }
     loop();
-    return { setColor(hex){ mat2.color.set(hex); } };
+    return { setColor(hex){ mat2.color.set(hex); }, setMaterial(skin){ mat2.color.set(skin.color); mat2.metalness=skin.metalness??0.05; mat2.roughness=skin.roughness??0.8; mat2.emissive.set(skin.emissive||0); mat2.emissiveIntensity=skin.emissiveIntensity||0; } };
   })();
+
+  applySkin(equippedSkin);
+  buildPlayerCosmetic(equippedCosmetic);
 
   function renderCustomizeMenu(){
     customizeGrid.innerHTML = '';
+    const heading=document.createElement('div'); heading.className='settings-section-title'; heading.textContent='SUITS'; customizeGrid.appendChild(heading);
     SKIN_OPTIONS.forEach(skin => {
-      const owned = ownedSkins.indexOf(skin.id) !== -1;
-      const equipped = equippedSkin === skin.id;
-      const swatch = document.createElement('button');
-      swatch.className = 'skin-swatch' + (equipped ? ' equipped' : '');
-      swatch.style.setProperty('--swatch-color', '#' + skin.color.toString(16).padStart(6, '0'));
-      swatch.innerHTML = `<span class="swatch-dot"></span><span>${skin.name}</span><span class="swatch-sub">${equipped ? 'EQUIPPED' : owned ? 'TAP TO WEAR' : ('\u{1F3AB} ' + skin.cost)}</span>`;
-      swatch.disabled = !owned && tickets < skin.cost;
-      swatch.addEventListener('click', () => { AudioEngine.click(); if (owned) equipSkin(skin.id); else buySkin(skin.id); });
-      customizeGrid.appendChild(swatch);
+      const owned = adminMode || ownedSkins.indexOf(skin.id) !== -1; const equipped = equippedSkin === skin.id;
+      const swatch=document.createElement('button'); swatch.className='skin-swatch'+(equipped?' equipped':'');
+      swatch.style.setProperty('--swatch-color','#'+skin.color.toString(16).padStart(6,'0'));
+      swatch.innerHTML=`<span class="swatch-dot"></span><span>${skin.name}</span><span class="swatch-sub">${equipped?'EQUIPPED':owned?'TAP TO WEAR':('🎟 '+skin.cost)}</span>`;
+      swatch.disabled=!owned&&!adminMode&&tickets<skin.cost;
+      swatch.addEventListener('click',()=>{AudioEngine.click();owned?equipSkin(skin.id):buySkin(skin.id)}); customizeGrid.appendChild(swatch);
+    });
+    const ctitle=document.createElement('div'); ctitle.className='settings-section-title'; ctitle.textContent='ACCESSORIES'; customizeGrid.appendChild(ctitle);
+    COSMETIC_OPTIONS.forEach(c => {
+      const owned=adminMode||ownedCosmetics.indexOf(c.id)!==-1; const equipped=equippedCosmetic===c.id;
+      const b=document.createElement('button'); b.className='skin-swatch'+(equipped?' equipped':'');
+      const colors={none:'#666',cap:'#b060e0',visor:'#22e0ff',crown:'#ffd700',halo:'#ffe600',antenna:'#ff2bd6',headphones:'#39ff14',bowtie:'#ff2bd6'};
+      b.style.setProperty('--swatch-color',colors[c.id]||'#aaa'); b.innerHTML=`<span class="cosmetic-icon">${({none:'○',cap:'⌒',visor:'▰',crown:'♛',halo:'◯',antenna:'⌁',headphones:'◉',bowtie:'◆'})[c.id]}</span><span>${c.name}</span><span class="swatch-sub">${equipped?'EQUIPPED':owned?'TAP TO WEAR':('🎟 '+c.cost)}</span>`;
+      b.disabled=!owned&&!adminMode&&tickets<c.cost; b.addEventListener('click',()=>{AudioEngine.click();owned?equipCosmetic(c.id):buyCosmetic(c.id)}); customizeGrid.appendChild(b);
     });
   }
   settingsBtn.addEventListener('click', () => {
@@ -1201,6 +1331,59 @@
     settingsOverlay.style.display = 'none';
   });
 
+
+  // ---------------------------------------------------------------------
+  // Feedback form. A static site cannot secretly deliver mail by itself, so
+  // this keeps a local copy and also supports an optional Formspree endpoint.
+  // Set FEEDBACK_ENDPOINT below if you want automatic submissions.
+  // ---------------------------------------------------------------------
+  const FEEDBACK_ENDPOINT = '';
+  const feedbackBtn=document.getElementById('feedback-btn');
+  const feedbackOverlay=document.getElementById('feedback-overlay');
+  const feedbackForm=document.getElementById('feedback-form');
+  const feedbackNote=document.getElementById('feedback-note');
+  feedbackBtn.addEventListener('click',()=>{ closeMenus(); feedbackOverlay.style.display='flex'; document.getElementById('feedback-message').focus(); });
+  document.getElementById('feedback-close-btn').addEventListener('click',()=>feedbackOverlay.style.display='none');
+  feedbackOverlay.addEventListener('click',e=>{if(e.target===feedbackOverlay) feedbackOverlay.style.display='none';});
+  feedbackForm.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const payload={type:document.getElementById('feedback-type').value,message:document.getElementById('feedback-message').value.trim(),contact:document.getElementById('feedback-contact').value.trim(),page:location.href,time:new Date().toISOString()};
+    if(!payload.message){feedbackNote.textContent='PLEASE ENTER A MESSAGE.'; return;}
+    try{localStorage.setItem('neonArcade.lastFeedback',JSON.stringify(payload));}catch(err){}
+    if(FEEDBACK_ENDPOINT){
+      try{const r=await fetch(FEEDBACK_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(payload)}); if(!r.ok) throw new Error('send failed'); feedbackNote.textContent='FEEDBACK SENT — THANK YOU!';}
+      catch(err){feedbackNote.textContent='COULD NOT SEND. YOUR FEEDBACK WAS SAVED LOCALLY.';}
+    }else{
+      const text=`Arcade feedback\nType: ${payload.type}\nMessage: ${payload.message}\nContact: ${payload.contact||'(none)'}\nTime: ${payload.time}`;
+      try{await navigator.clipboard.writeText(text); feedbackNote.textContent='COPIED TO CLIPBOARD — PASTE IT WHERE YOU KEEP FEEDBACK.';}catch(err){feedbackNote.textContent='SAVED LOCALLY. CONNECT A FORM ENDPOINT TO RECEIVE IT AUTOMATICALLY.';}
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Operator/admin mode. This is intentionally unobtrusive, but because this
+  // is a client-side HTML file it is NOT a secure authentication system.
+  // The passphrase works on any computer; localStorage is only used to keep
+  // the unlocked state on that computer.
+  // ---------------------------------------------------------------------
+  const ADMIN_CODE_HASH='02792631eeca223f38e439a029fe1dda106e08e1d51a66809049fcf5ea7cdc04';
+  const adminOverlay=document.getElementById('admin-overlay');
+  const adminCode=document.getElementById('admin-code');
+  const adminStatus=document.getElementById('admin-status');
+  function setAdminMode(on){
+    adminMode=!!on; adminStatus.textContent='ADMIN MODE: '+(adminMode?'ON • INFINITE TICKETS • ALL UNLOCKED':'OFF'); adminStatus.classList.toggle('on',adminMode); refreshTicketDisplay(); renderCustomizeMenu();
+    try{localStorage.setItem('neonArcade.admin',''+(adminMode?1:0));}catch(e){}
+  }
+  function openAdmin(){ if(gameOpen||cameraAnimating) return; closeMenus(); adminOverlay.style.display='flex'; adminCode.value=''; setTimeout(()=>adminCode.focus(),50); }
+  async function unlockAdmin(){
+    const value=adminCode.value; if(!value) return;
+    const data=new TextEncoder().encode(value); const digest=await crypto.subtle.digest('SHA-256',data); const hash=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(hash===ADMIN_CODE_HASH){setAdminMode(true);adminOverlay.style.display='none';AudioEngine.click();}
+    else{adminCode.value='';adminCode.placeholder='ACCESS DENIED';adminCode.focus();}
+  }
+  document.getElementById('admin-login-btn').addEventListener('click',unlockAdmin);
+  document.getElementById('admin-cancel-btn').addEventListener('click',()=>adminOverlay.style.display='none');
+  adminCode.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();unlockAdmin();} if(e.key==='Escape') adminOverlay.style.display='none';});
+  try{ if(localStorage.getItem('neonArcade.admin')==='1') setAdminMode(true); }catch(e){}
 
   const leaderboardBtn = document.getElementById('leaderboard-btn');
   const leaderboardOverlay = document.getElementById('leaderboard-overlay');
@@ -1230,6 +1413,8 @@
   });
   document.getElementById('leaderboard-close-btn').addEventListener('click', () => {
     leaderboardOverlay.style.display = 'none';
+    feedbackOverlay.style.display = 'none';
+    adminOverlay.style.display = 'none';
   });
   settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) settingsOverlay.style.display = 'none'; });
   leaderboardOverlay.addEventListener('click', e => { if (e.target === leaderboardOverlay) leaderboardOverlay.style.display = 'none'; });
@@ -1237,6 +1422,8 @@
   function closeMenus(){
     settingsOverlay.style.display = 'none';
     leaderboardOverlay.style.display = 'none';
+    feedbackOverlay.style.display = 'none';
+    adminOverlay.style.display = 'none';
   }
 
   function tryJump(){
@@ -1624,6 +1811,9 @@
     const k = e.key;
     const lower = k.toLowerCase();
 
+    // Hidden operator shortcut: Ctrl+Shift+Alt+A.
+    if (e.ctrlKey && e.shiftKey && e.altKey && lower === 'a') { e.preventDefault(); openAdmin(); return; }
+
     if (k === 'Escape') {
       if (settingsOverlay.style.display === 'flex' || leaderboardOverlay.style.display === 'flex') {
         closeMenus();
@@ -1979,6 +2169,7 @@
 
     if (!joystickDragging) stickTilt.rotation.x *= 0.82;
     screenGlow.intensity = 1.2 + Math.sin(Date.now() * 0.004) * 0.2;
+    if(equippedSkin==='gold'){ const shimmer=.11+Math.sin(now*.003)*.045; playerMat.emissiveIntensity=shimmer; }
     updateRoomProximity();
 
     ticketTimeAccumulator += dt;
