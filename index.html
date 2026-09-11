@@ -1167,7 +1167,7 @@
     if (typeof miniPreview !== 'undefined') miniPreview.setMaterial(skin);
   }
   function equipSkin(id){
-    if (ownedSkins.indexOf(id) === -1) return;
+    if (!adminMode && ownedSkins.indexOf(id) === -1) return;
     equippedSkin = id;
     try { localStorage.setItem('neonArcade.equippedSkin', id); } catch(e){}
     applySkin(id);
@@ -1219,7 +1219,7 @@
       const knot=new THREE.Mesh(new THREE.SphereGeometry(.026,10,8),m); knot.position.set(0,1.04,.145); group.add(knot);
     }
   }
-  function equipCosmetic(id){ if(ownedCosmetics.indexOf(id)===-1) return; equippedCosmetic=id; try{localStorage.setItem('neonArcade.equippedCosmetic',id)}catch(e){} buildPlayerCosmetic(id); renderCustomizeMenu(); }
+  function equipCosmetic(id){ if(!adminMode && ownedCosmetics.indexOf(id)===-1) return; equippedCosmetic=id; try{localStorage.setItem('neonArcade.equippedCosmetic',id)}catch(e){} buildPlayerCosmetic(id); renderCustomizeMenu(); }
   function buyCosmetic(id){ const c=COSMETIC_OPTIONS.find(x=>x.id===id); if(!c||ownedCosmetics.includes(id)||(!adminMode&&tickets<c.cost)) return; if(!adminMode) addTickets(-c.cost); ownedCosmetics.push(id); try{localStorage.setItem('neonArcade.ownedCosmetics',JSON.stringify(ownedCosmetics))}catch(e){} equipCosmetic(id); }
 
   playerMat.color.set((SKIN_OPTIONS.find(s => s.id === equippedSkin) || SKIN_OPTIONS[0]).color);
@@ -1365,12 +1365,20 @@
   // The passphrase works on any computer; localStorage is only used to keep
   // the unlocked state on that computer.
   // ---------------------------------------------------------------------
-  const ADMIN_CODE_HASH='02792631eeca223f38e439a029fe1dda106e08e1d51a66809049fcf5ea7cdc04';
+  const ADMIN_CODE_HASH='ec8d2cb6bff9ee7d24f9c9d91576c3e290668b582435dfc378be821cf0d5b217';
   const adminOverlay=document.getElementById('admin-overlay');
   const adminCode=document.getElementById('admin-code');
   const adminStatus=document.getElementById('admin-status');
   function setAdminMode(on){
-    adminMode=!!on; adminStatus.textContent='ADMIN MODE: '+(adminMode?'ON • INFINITE TICKETS • ALL UNLOCKED':'OFF'); adminStatus.classList.toggle('on',adminMode); refreshTicketDisplay(); renderCustomizeMenu();
+    adminMode=!!on;
+    if(!adminMode){
+      if(ownedSkins.indexOf(equippedSkin)===-1) equipSkin('grey');
+      if(ownedCosmetics.indexOf(equippedCosmetic)===-1) equipCosmetic('none');
+    }
+    adminStatus.textContent='ADMIN MODE: '+(adminMode?'ON • INFINITE TICKETS • ALL UNLOCKED':'OFF');
+    adminStatus.classList.toggle('on',adminMode);
+    refreshTicketDisplay();
+    renderCustomizeMenu();
     try{localStorage.setItem('neonArcade.admin',''+(adminMode?1:0));}catch(e){}
   }
   function openAdmin(){ if(gameOpen||cameraAnimating) return; closeMenus(); adminOverlay.style.display='flex'; adminCode.value=''; setTimeout(()=>adminCode.focus(),50); }
